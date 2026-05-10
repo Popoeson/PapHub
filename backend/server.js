@@ -8,6 +8,8 @@ const connectDB = require('./config/db');
 const { globalLimiter, loginLimiter } = require('./middleware/rateLimiter');
 
 const authRoutes = require('./routes/auth');
+const categoryRoutes = require('./routes/categories');
+const productRoutes = require('./routes/products');
 
 const app = express();
 
@@ -45,6 +47,8 @@ app.use(globalLimiter);
 
 // Routes
 app.use('/api/auth', loginLimiter, authRoutes);
+app.use('/api/admin/categories', categoryRoutes);
+app.use('/api/admin/products', productRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
