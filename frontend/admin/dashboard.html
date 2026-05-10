@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PapHub — Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <link rel="stylesheet" href="../assets/css/dashboard.css" />
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon"><i class="fa-solid fa-bowl-food"></i></span>
+      <span class="brand-name">PapHub</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item active"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+      <a href="categories.html" class="nav-item"><i class="fa-solid fa-tags"></i> Categories</a>
+      <a href="products.html" class="nav-item"><i class="fa-solid fa-box"></i> Products</a>
+      <a href="orders.html" class="nav-item"><i class="fa-solid fa-receipt"></i> Orders</a>
+      <a href="reviews.html" class="nav-item"><i class="fa-solid fa-star"></i> Reviews</a>
+    </nav>
+    <button class="btn-logout" id="logoutBtn">
+      <i class="fa-solid fa-right-from-bracket"></i> Logout
+    </button>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+      <h1 class="page-title">Dashboard</h1>
+      <span class="welcome-text" id="welcomeText">Welcome back</span>
+    </header>
+
+    <main class="main-content">
+
+      <!-- Stats cards -->
+      <div class="stats-grid">
+        <div class="stat-card glass">
+          <div class="stat-icon stat-icon-products">
+            <i class="fa-solid fa-box"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Products</span>
+            <span class="stat-value" id="statProducts">—</span>
+          </div>
+        </div>
+
+        <div class="stat-card glass">
+          <div class="stat-icon stat-icon-orders">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Orders</span>
+            <span class="stat-value" id="statOrders">—</span>
+          </div>
+        </div>
+
+        <div class="stat-card glass">
+          <div class="stat-icon stat-icon-revenue">
+            <i class="fa-solid fa-naira-sign"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Revenue</span>
+            <span class="stat-value" id="statRevenue">—</span>
+          </div>
+        </div>
+
+        <div class="stat-card glass">
+          <div class="stat-icon stat-icon-pending">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Pending Orders</span>
+            <span class="stat-value" id="statPending">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="quick-actions">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="action-cards">
+          <a href="categories.html" class="action-card glass">
+            <i class="fa-solid fa-tags"></i>
+            <span>Manage Categories</span>
+          </a>
+          <a href="products.html" class="action-card glass">
+            <i class="fa-solid fa-box"></i>
+            <span>Manage Products</span>
+          </a>
+          <a href="orders.html" class="action-card glass">
+            <i class="fa-solid fa-receipt"></i>
+            <span>View Orders</span>
+          </a>
+          <a href="reviews.html" class="action-card glass">
+            <i class="fa-solid fa-star"></i>
+            <span>Manage Reviews</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent orders placeholder — populated in Slice 8 -->
+      <div class="card">
+        <div class="card-header">Recent Orders</div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="recentOrdersBody">
+              <tr>
+                <td colspan="5" class="table-empty">
+                  Orders will appear here once customers start placing them.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="../assets/js/toast.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
