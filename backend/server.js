@@ -51,18 +51,6 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', env: process.env.NODE_ENV });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found.' });
-});
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(err.status || 500).json({
-    message: err.message || 'Internal server error.',
-  });
-});
 
 // TEMPORARY SEED ROUTE — DELETE AFTER USE
 app.get('/api/seed-admin', async (req, res) => {
@@ -85,6 +73,20 @@ app.get('/api/seed-admin', async (req, res) => {
   await Admin.create({ email, passwordHash });
 
   return res.status(200).json({ message: `Admin created: ${email}` });
+});
+
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found.' });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal server error.',
+  });
 });
 
 const PORT = process.env.PORT || 5000;
