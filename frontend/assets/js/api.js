@@ -4,7 +4,7 @@
  * Handles access token in memory and silent refresh via refresh token cookie.
  */
 
-const API_BASE = 'https://pap-hub.vercel.app'; // Update to production URL on deploy
+const API_BASE = 'https://paphub-lav4.onrender.com'; // Update to production URL on deploy
 
 let _accessToken = null;
 
