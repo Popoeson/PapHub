@@ -27,17 +27,17 @@ const verifyRefreshToken = (token) => {
 const setRefreshTokenCookie = (res, token) => {
   res.cookie('refreshToken', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+    secure: true,          // always true — required for SameSite=None
+    sameSite: 'None',      // cross-origin: Vercel frontend -> Render backend
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 };
 
 const clearRefreshTokenCookie = (res) => {
   res.clearCookie('refreshToken', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Strict',
+    secure: true,
+    sameSite: 'None',
   });
 };
 
