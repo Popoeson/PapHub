@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PapHub — Categories</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon"><i class="fa-solid fa-bowl-food"></i></span>
+      <span class="brand-name">PapHub</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+      <a href="categories.html" class="nav-item active"><i class="fa-solid fa-tags"></i> Categories</a>
+      <a href="products.html" class="nav-item"><i class="fa-solid fa-box"></i> Products</a>
+      <a href="orders.html" class="nav-item"><i class="fa-solid fa-receipt"></i> Orders</a>
+      <a href="reviews.html" class="nav-item"><i class="fa-solid fa-star"></i> Reviews</a>
+    </nav>
+    <button class="btn-logout" id="logoutBtn">
+      <i class="fa-solid fa-right-from-bracket"></i> Logout
+    </button>
+  </aside>
+
+  <!-- Main content -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+      <h1 class="page-title">Categories</h1>
+      <button class="btn-primary" id="openAddModal">
+        <i class="fa-solid fa-plus"></i> Add Category
+      </button>
+    </header>
+
+    <main class="main-content">
+      <!-- Categories table -->
+      <div class="card">
+        <div class="card-header">
+          <span id="categoryCount">Loading...</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="categoriesTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Slug</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="categoriesBody">
+              <tr><td colspan="4" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Category Modal -->
+  <div class="modal-overlay hidden" id="categoryModal">
+    <div class="modal glass">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Category</h2>
+        <button class="modal-close" id="closeModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="categoryForm" novalidate>
+        <input type="hidden" id="editingId" />
+        <div class="field-group">
+          <label for="categoryName">Category Name</label>
+          <input type="text" id="categoryName" placeholder="e.g. Plain Pap" maxlength="50" required />
+          <span class="field-error" id="nameError"></span>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelModal">Cancel</button>
+          <button type="submit" class="btn-primary" id="saveBtn">
+            <span class="btn-text">Save</span>
+            <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal-overlay hidden" id="deleteModal">
+    <div class="modal glass modal-sm">
+      <div class="modal-header">
+        <h2>Delete Category</h2>
+        <button class="modal-close" id="closeDeleteModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="modal-body-text">Are you sure you want to delete <strong id="deleteName"></strong>? This cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelDelete">Cancel</button>
+        <button class="btn-danger" id="confirmDelete">
+          <span class="btn-text">Delete</span>
+          <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="../assets/js/toast.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="categories.js"></script>
+</body>
+</html>
