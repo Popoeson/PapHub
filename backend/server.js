@@ -5,6 +5,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
+const compression = require('compression');
 const { globalLimiter, loginLimiter } = require('./middleware/rateLimiter');
 
 const authRoutes = require('./routes/auth');
@@ -15,6 +16,7 @@ const app = express();
 
 // Trust the first proxy (required on Render, Railway, Heroku, etc.)
 app.set('trust proxy', 1);
+app.use(compression());
 
 // Connect to MongoDB
 connectDB();
