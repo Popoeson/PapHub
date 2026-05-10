@@ -11,6 +11,9 @@ const authRoutes = require('./routes/auth');
 
 const app = express();
 
+// Trust the first proxy (required on Render, Railway, Heroku, etc.)
+app.set('trust proxy', 1);
+
 // Connect to MongoDB
 connectDB();
 
