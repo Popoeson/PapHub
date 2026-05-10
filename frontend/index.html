@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PapHub — Fresh, delicious pap delivered to you." />
+  <title>PapHub — Fresh Pap Store</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/store.css" />
+</head>
+<body>
+
+  <!-- ═══ NAVBAR ═══════════════════════════════════════════════════════════ -->
+  <nav class="navbar glass-nav" id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <span class="brand-icon-sm"><i class="fa-solid fa-bowl-food"></i></span>
+        <span class="brand-name">PapHub</span>
+      </a>
+
+      <div class="nav-right">
+        <button class="cart-btn" id="cartBtn" aria-label="Open cart">
+          <i class="fa-solid fa-basket-shopping"></i>
+          <span class="cart-badge hidden" id="cartBadge">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══ HERO ══════════════════════════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Freshly Made, Lovingly Served</p>
+      <h1 class="hero-title">Discover Our<br /><span class="hero-accent">Premium Pap</span></h1>
+      <p class="hero-sub">Smooth, nourishing, and made with the finest grains — crafted for every occasion.</p>
+      <a href="#store" class="btn-hero">
+        Shop Now <i class="fa-solid fa-arrow-down"></i>
+      </a>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-circle"></div>
+      <div class="hero-ring"></div>
+    </div>
+  </section>
+
+  <!-- ═══ STORE SECTION ════════════════════════════════════════════════════ -->
+  <section class="store-section" id="store">
+    <div class="store-inner">
+
+      <div class="store-header">
+        <h2 class="section-heading">Our Products</h2>
+        <p class="section-sub">All made fresh, delivered with care.</p>
+      </div>
+
+      <!-- Category filters -->
+      <div class="category-tabs" id="categoryTabs" role="tablist">
+        <button class="cat-tab active" data-category="" role="tab">All</button>
+      </div>
+
+      <!-- Product grid -->
+      <div class="product-grid" id="productGrid">
+        <!-- Skeleton loaders -->
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+        <div class="product-skeleton"></div>
+      </div>
+
+      <!-- Load more -->
+      <div class="load-more-wrap" id="loadMoreWrap">
+        <button class="btn-load-more hidden" id="loadMoreBtn">
+          <span class="btn-text">Load More</span>
+          <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══ REVIEWS SECTION ══════════════════════════════════════════════════ -->
+  <section class="reviews-section" id="reviews">
+    <div class="reviews-inner">
+      <h2 class="section-heading">What Customers Say</h2>
+      <p class="section-sub">Real experiences from real people.</p>
+      <div class="reviews-grid" id="reviewsGrid">
+        <p class="reviews-empty hidden" id="reviewsEmpty">No reviews yet. Be the first!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ════════════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="brand-icon-sm"><i class="fa-solid fa-bowl-food"></i></span>
+        <span class="brand-name">PapHub</span>
+      </div>
+      <p class="footer-copy">&copy; <span id="year"></span> PapHub. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="/pages/review.html">Leave a Review</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══ CART MODAL ════════════════════════════════════════════════════════ -->
+  <div class="cart-overlay hidden" id="cartOverlay" role="dialog" aria-modal="true" aria-label="Your cart">
+    <div class="cart-modal glass-cart">
+      <div class="cart-header">
+        <h2 class="cart-title"><i class="fa-solid fa-basket-shopping"></i> Your Cart</h2>
+        <button class="cart-close" id="cartClose" aria-label="Close cart">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="cart-body" id="cartBody">
+        <!-- Cart items rendered by JS -->
+      </div>
+
+      <div class="cart-footer" id="cartFooter">
+        <div class="cart-summary">
+          <span class="cart-total-label">Total</span>
+          <span class="cart-total-value" id="cartTotal">₦0.00</span>
+        </div>
+        <button class="btn-checkout" id="checkoutBtn">
+          Proceed to Checkout <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button class="btn-clear-cart" id="clearCartBtn">
+          <i class="fa-solid fa-trash"></i> Clear Cart
+        </button>
+      </div>
+
+      <div class="cart-empty hidden" id="cartEmpty">
+        <i class="fa-solid fa-basket-shopping"></i>
+        <p>Your cart is empty.</p>
+        <p class="cart-empty-sub">Add some products to get started.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="assets/js/toast.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/store.js"></script>
+</body>
+</html>
