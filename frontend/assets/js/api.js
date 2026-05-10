@@ -37,24 +37,31 @@ async function request(endpoint, options = {}, retry = true) {
   const config = {
     ...options,
     headers,
-    credentials: 'include', // sends httpOnly refresh token cookie
+    credentials: 'include',
   };
 
   const res = await fetch(`${API_BASE}${endpoint}`, config);
 
-  // Silent refresh: if 401 with TOKEN_EXPIRED, try refreshing once
+  // Silent refresh: if 401, parse body once, check for TOKEN_EXPIRED,
+  // then reconstruct a fake response so the caller can still read the body.
   if (res.status === 401 && retry) {
     const body = await res.json().catch(() => ({}));
 
     if (body.code === 'TOKEN_EXPIRED') {
       const refreshed = await attemptTokenRefresh();
       if (refreshed) {
-        return request(endpoint, options, false); // retry once
+        return request(endpoint, options, false);
       } else {
         handleSessionExpired();
         return null;
       }
     }
+
+    // Not a TOKEN_EXPIRED 401 — reconstruct response so caller can read body
+    return new Response(JSON.stringify(body), {
+      status: res.status,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   return res;
@@ -112,10 +119,8 @@ const Auth = {
 };
 
 // ─── Protect admin pages ───────────────────────────────────────────────────
-// Call this at the top of every admin page JS to guard access.
 
 async function requireAuth() {
-  // Try silent refresh first (access token may not be in memory on page load)
   if (!_accessToken) {
     const refreshed = await attemptTokenRefresh();
     if (!refreshed) {
