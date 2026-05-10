@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PapHub — Products</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon"><i class="fa-solid fa-bowl-food"></i></span>
+      <span class="brand-name">PapHub</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+      <a href="categories.html" class="nav-item"><i class="fa-solid fa-tags"></i> Categories</a>
+      <a href="products.html" class="nav-item active"><i class="fa-solid fa-box"></i> Products</a>
+      <a href="orders.html" class="nav-item"><i class="fa-solid fa-receipt"></i> Orders</a>
+      <a href="reviews.html" class="nav-item"><i class="fa-solid fa-star"></i> Reviews</a>
+    </nav>
+    <button class="btn-logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+      <h1 class="page-title">Products</h1>
+      <button class="btn-primary" id="openAddModal"><i class="fa-solid fa-plus"></i> Add Product</button>
+    </header>
+
+    <main class="main-content">
+      <!-- Filters -->
+      <div class="filters-bar">
+        <select id="categoryFilter" class="filter-select">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span id="productCount">Loading...</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Slash Price</th>
+                <th>Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="productsBody">
+              <tr><td colspan="7" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Product Modal -->
+  <div class="modal-overlay hidden" id="productModal">
+    <div class="modal modal-lg glass">
+      <div class="modal-header">
+        <h2 id="productModalTitle">Add Product</h2>
+        <button class="modal-close" id="closeProductModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="productForm" novalidate enctype="multipart/form-data">
+        <input type="hidden" id="editingProductId" />
+
+        <div class="form-grid">
+          <div class="field-group">
+            <label for="productName">Product Name</label>
+            <input type="text" id="productName" placeholder="e.g. Creamy Pap" maxlength="100" required />
+            <span class="field-error" id="productNameError"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="productCategory">Category</label>
+            <select id="productCategory" required>
+              <option value="">Select category</option>
+            </select>
+            <span class="field-error" id="productCategoryError"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="productPrice">Price (₦)</label>
+            <input type="number" id="productPrice" placeholder="0.00" min="0" step="0.01" required />
+            <span class="field-error" id="productPriceError"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="productSlashPrice">Slash Price (₦) <span class="label-hint">optional</span></label>
+            <input type="number" id="productSlashPrice" placeholder="0.00" min="0" step="0.01" />
+          </div>
+
+          <div class="field-group full-width">
+            <label for="productDescription">Description</label>
+            <textarea id="productDescription" placeholder="Describe the product..." rows="3" maxlength="1000" required></textarea>
+            <span class="field-error" id="productDescError"></span>
+          </div>
+
+          <div class="field-group full-width">
+            <label>Images <span class="label-hint">max 4, up to 5MB each</span></label>
+            <div class="image-upload-area" id="imageUploadArea">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <p>Click to upload or drag and drop</p>
+              <p class="upload-hint">JPEG, PNG, WebP</p>
+              <input type="file" id="imageInput" multiple accept="image/jpeg,image/jpg,image/png,image/webp" class="hidden" />
+            </div>
+            <div class="image-preview-grid" id="imagePreviewGrid"></div>
+            <span class="field-error" id="imageError"></span>
+          </div>
+
+          <div class="field-group">
+            <label class="toggle-label">
+              In Stock
+              <div class="toggle-wrap">
+                <input type="checkbox" id="inStockToggle" checked />
+                <span class="toggle-track">
+                  <span class="toggle-thumb"></span>
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelProductModal">Cancel</button>
+          <button type="submit" class="btn-primary" id="saveProductBtn">
+            <span class="btn-text">Save Product</span>
+            <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal-overlay hidden" id="deleteProductModal">
+    <div class="modal modal-sm glass">
+      <div class="modal-header">
+        <h2>Delete Product</h2>
+        <button class="modal-close" id="closeDeleteProductModal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="modal-body-text">Are you sure you want to delete <strong id="deleteProductName"></strong>? All images will be removed.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelDeleteProduct">Cancel</button>
+        <button class="btn-danger" id="confirmDeleteProduct">
+          <span class="btn-text">Delete</span>
+          <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="../assets/js/toast.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="products.js"></script>
+</body>
+</html>
