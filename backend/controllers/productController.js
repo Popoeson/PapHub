@@ -2,10 +2,21 @@ const Product = require('../models/Product');
 const Category = require('../models/Category');
 const { deleteImage } = require('../config/cloudinary');
 
+const cache = require('../utils/cache');
+const CACHE_TTL = 120;
+const productCacheKey = (query = '') => `products:${query}`;
+
 // GET /api/admin/products
 const getProducts = async (req, res) => {
   try {
     const { category, page = 1, limit = 20 } = req.query;
+
+    const key = productCacheKey(
+      `cat=${category || 'all'}&page=${page}&limit=${limit}`
+    );
+
+    const cached = cache.get(key);
+    if (cached) return res.status(200).json(cached);
 
     const filter = {};
     if (category) filter.category = category;
@@ -21,14 +32,18 @@ const getProducts = async (req, res) => {
       Product.countDocuments(filter),
     ]);
 
-    res.status(200).json({
+    const payload = {
       products,
       pagination: {
         total,
         page: parseInt(page),
         pages: Math.ceil(total / parseInt(limit)),
       },
-    });
+    };
+
+    cache.set(key, payload, CACHE_TTL);
+
+    res.status(200).json(payload);
   } catch (err) {
     console.error('getProducts error:', err);
     res.status(500).json({ message: 'Server error.' });
@@ -38,8 +53,15 @@ const getProducts = async (req, res) => {
 // GET /api/admin/products/:id
 const getProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate('category', 'name slug');
-    if (!product) return res.status(404).json({ message: 'Product not found.' });
+    const product = await Product.findById(req.params.id).populate(
+      'category',
+      'name slug'
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found.' });
+    }
+
     res.status(200).json({ product });
   } catch (err) {
     console.error('getProduct error:', err);
@@ -50,15 +72,18 @@ const getProduct = async (req, res) => {
 // POST /api/admin/products
 const createProduct = async (req, res) => {
   try {
-    const { name, description, price, slashPrice, category, inStock } = req.body;
+    const { name, description, price, slashPrice, category, inStock } =
+      req.body;
 
     // Validate category exists
     const categoryDoc = await Category.findById(category);
+
     if (!categoryDoc) {
       // Clean up uploaded images if category invalid
       if (req.files?.length) {
         await Promise.all(req.files.map((f) => deleteImage(f.filename)));
       }
+
       return res.status(400).json({ message: 'Invalid category.' });
     }
 
@@ -67,7 +92,10 @@ const createProduct = async (req, res) => {
       if (req.files?.length) {
         await Promise.all(req.files.map((f) => deleteImage(f.filename)));
       }
-      return res.status(400).json({ message: 'Slash price must be greater than the actual price.' });
+
+      return res.status(400).json({
+        message: 'Slash price must be greater than the actual price.',
+      });
     }
 
     const images = (req.files || []).map((file) => ({
@@ -86,13 +114,18 @@ const createProduct = async (req, res) => {
     });
 
     await product.populate('category', 'name slug');
+
+    cache.invalidatePattern('products:');
+
     res.status(201).json({ message: 'Product created.', product });
   } catch (err) {
     console.error('createProduct error:', err);
+
     // Clean up images on failure
     if (req.files?.length) {
       await Promise.all(req.files.map((f) => deleteImage(f.filename)));
     }
+
     res.status(500).json({ message: 'Server error.' });
   }
 };
@@ -101,42 +134,71 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
+
     if (!product) {
       if (req.files?.length) {
         await Promise.all(req.files.map((f) => deleteImage(f.filename)));
       }
+
       return res.status(404).json({ message: 'Product not found.' });
     }
 
-    const { name, description, price, slashPrice, category, inStock, removeImages } = req.body;
+    const {
+      name,
+      description,
+      price,
+      slashPrice,
+      category,
+      inStock,
+      removeImages,
+    } = req.body;
 
     // Validate category if being changed
     if (category && category !== product.category.toString()) {
       const categoryDoc = await Category.findById(category);
+
       if (!categoryDoc) {
         if (req.files?.length) {
           await Promise.all(req.files.map((f) => deleteImage(f.filename)));
         }
+
         return res.status(400).json({ message: 'Invalid category.' });
       }
     }
 
     // Validate slash price
     const finalPrice = price ? parseFloat(price) : product.price;
-    const finalSlash = slashPrice !== undefined ? (slashPrice ? parseFloat(slashPrice) : null) : product.slashPrice;
+
+    const finalSlash =
+      slashPrice !== undefined
+        ? slashPrice
+          ? parseFloat(slashPrice)
+          : null
+        : product.slashPrice;
 
     if (finalSlash && finalSlash <= finalPrice) {
       if (req.files?.length) {
         await Promise.all(req.files.map((f) => deleteImage(f.filename)));
       }
-      return res.status(400).json({ message: 'Slash price must be greater than the actual price.' });
+
+      return res.status(400).json({
+        message: 'Slash price must be greater than the actual price.',
+      });
     }
 
     // Remove images marked for deletion
     if (removeImages) {
-      const toRemove = Array.isArray(removeImages) ? removeImages : [removeImages];
-      await Promise.all(toRemove.map((publicId) => deleteImage(publicId)));
-      product.images = product.images.filter((img) => !toRemove.includes(img.publicId));
+      const toRemove = Array.isArray(removeImages)
+        ? removeImages
+        : [removeImages];
+
+      await Promise.all(
+        toRemove.map((publicId) => deleteImage(publicId))
+      );
+
+      product.images = product.images.filter(
+        (img) => !toRemove.includes(img.publicId)
+      );
     }
 
     // Append new images
@@ -145,6 +207,7 @@ const updateProduct = async (req, res) => {
         url: file.path,
         publicId: file.filename,
       }));
+
       product.images = [...product.images, ...newImages];
     }
 
@@ -152,7 +215,11 @@ const updateProduct = async (req, res) => {
     if (product.images.length > 4) {
       // Remove oldest extras from Cloudinary
       const extras = product.images.slice(4);
-      await Promise.all(extras.map((img) => deleteImage(img.publicId)));
+
+      await Promise.all(
+        extras.map((img) => deleteImage(img.publicId))
+      );
+
       product.images = product.images.slice(0, 4);
     }
 
@@ -161,17 +228,23 @@ const updateProduct = async (req, res) => {
     if (price) product.price = parseFloat(price);
     if (slashPrice !== undefined) product.slashPrice = finalSlash;
     if (category) product.category = category;
-    if (inStock !== undefined) product.inStock = inStock === 'true' || inStock === true;
+    if (inStock !== undefined) {
+      product.inStock = inStock === 'true' || inStock === true;
+    }
 
     await product.save();
     await product.populate('category', 'name slug');
 
+    cache.invalidatePattern('products:');
+
     res.status(200).json({ message: 'Product updated.', product });
   } catch (err) {
     console.error('updateProduct error:', err);
+
     if (req.files?.length) {
       await Promise.all(req.files.map((f) => deleteImage(f.filename)));
     }
+
     res.status(500).json({ message: 'Server error.' });
   }
 };
@@ -180,14 +253,22 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: 'Product not found.' });
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found.' });
+    }
 
     // Delete all images from Cloudinary
     if (product.images?.length) {
-      await Promise.all(product.images.map((img) => deleteImage(img.publicId)));
+      await Promise.all(
+        product.images.map((img) => deleteImage(img.publicId))
+      );
     }
 
     await product.deleteOne();
+
+    cache.invalidatePattern('products:');
+
     res.status(200).json({ message: 'Product deleted.' });
   } catch (err) {
     console.error('deleteProduct error:', err);
@@ -199,13 +280,21 @@ const deleteProduct = async (req, res) => {
 const toggleStock = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: 'Product not found.' });
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found.' });
+    }
 
     product.inStock = !product.inStock;
+
     await product.save();
 
+    cache.invalidatePattern('products:');
+
     res.status(200).json({
-      message: `Product marked as ${product.inStock ? 'in stock' : 'out of stock'}.`,
+      message: `Product marked as ${
+        product.inStock ? 'in stock' : 'out of stock'
+      }.`,
       inStock: product.inStock,
     });
   } catch (err) {
@@ -214,4 +303,11 @@ const toggleStock = async (req, res) => {
   }
 };
 
-module.exports = { getProducts, getProduct, createProduct, updateProduct, deleteProduct, toggleStock };
+module.exports = {
+  getProducts,
+  getProduct,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  toggleStock,
+};
