@@ -64,6 +64,29 @@ app.use((err, req, res, next) => {
   });
 });
 
+// TEMPORARY SEED ROUTE — DELETE AFTER USE
+app.get('/api/seed-admin', async (req, res) => {
+  const bcrypt = require('bcryptjs');
+  const Admin = require('./models/Admin');
+
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'ADMIN_EMAIL and ADMIN_PASSWORD not set in env.' });
+  }
+
+  const existing = await Admin.findOne({ email });
+  if (existing) {
+    return res.status(400).json({ message: 'Admin already exists.' });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  await Admin.create({ email, passwordHash });
+
+  return res.status(200).json({ message: `Admin created: ${email}` });
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`PapHub server running on port ${PORT} [${process.env.NODE_ENV}]`);
