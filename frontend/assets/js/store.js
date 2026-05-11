@@ -299,7 +299,7 @@ function initCartModal() {
       showToast('Your cart is empty.', 'error');
       return;
     }
-    window.location.href = '/pages/checkout.html';
+    window.location.href = '/checkout.html';
   });
 
   overlay.addEventListener('click', (e) => {
