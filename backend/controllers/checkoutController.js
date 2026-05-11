@@ -71,7 +71,7 @@ const initializeCheckout = async (req, res) => {
         email,
         amount: Math.round(totalAmount * 100), // Paystack uses kobo
         currency: 'NGN',
-        callback_url: `${process.env.FRONTEND_URL}/pages/success.html`,
+        callback_url: `${process.env.FRONTEND_URL}/success.html`,
         metadata,
       },
       {
