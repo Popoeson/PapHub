@@ -7,11 +7,13 @@ const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const compression = require('compression');
 const { globalLimiter, loginLimiter } = require('./middleware/rateLimiter');
-const publicRoutes = require('./routes/public');
 
+
+const publicRoutes = require('./routes/public');
 const authRoutes = require('./routes/auth');
 const categoryRoutes = require('./routes/categories');
 const productRoutes = require('./routes/products');
+const checkoutRoutes = require('./routes/checkout');
 
 const app = express();
 
@@ -53,6 +55,7 @@ app.use('/api/auth', loginLimiter, authRoutes);
 app.use('/api/admin/categories', categoryRoutes);
 app.use('/api/admin/products', productRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/checkout', checkoutRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
