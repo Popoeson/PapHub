@@ -32,16 +32,55 @@ function initNavbarScroll() {
   }, { passive: true });
 }
 
+// ─── Session cache ─────────────────────────────────────────────────────────
+// Caches API responses in sessionStorage for the duration of the browser session.
+// Zero API calls on page revisit within the same tab session.
+async function fetchWithSessionCache(url) {
+  try {
+    const cached = sessionStorage.getItem(url);
+    if (cached) return JSON.parse(cached);
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Fetch failed');
+
+    const data = await res.json();
+    sessionStorage.setItem(url, JSON.stringify(data));
+    return data;
+  } catch (err) {
+    // If sessionStorage is full or unavailable, fall back to plain fetch
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Fetch failed');
+    return res.json();
+  }
+}
+
+// Invalidate session cache for a url pattern — called when category changes
+function clearSessionCache(pattern) {
+  const keysToRemove = [];
+  for (let i = 0; i < sessionStorage.length; i++) {
+    const key = sessionStorage.key(i);
+    if (key && key.includes(pattern)) keysToRemove.push(key);
+  }
+  keysToRemove.forEach((k) => sessionStorage.removeItem(k));
+}
+
+// ─── Cloudinary image optimisation ────────────────────────────────────────
+// Appends Cloudinary transformation params:
+// f_auto  — serves WebP to browsers that support it (40-60% smaller)
+// q_auto  — automatic quality compression
+// w_600   — resize to 600px wide (sufficient for product cards)
+function optimiseImageUrl(url) {
+  if (!url || !url.includes('cloudinary.com')) return url;
+  return url.replace('/upload/', '/upload/f_auto,q_auto,w_600/');
+}
+
 // ─── Categories ────────────────────────────────────────────────────────────
 async function loadCategories() {
   try {
-    const res = await fetch(`${STORE_API}/categories`);
-    if (!res.ok) return;
-
-    const { categories } = await res.json();
+    const data = await fetchWithSessionCache(`${STORE_API}/categories`);
     const tabs = document.getElementById('categoryTabs');
 
-    categories.forEach((cat) => {
+    data.categories.forEach((cat) => {
       const btn = document.createElement('button');
       btn.className = 'cat-tab';
       btn.textContent = cat.name;
@@ -57,6 +96,8 @@ async function loadCategories() {
 
 function selectCategory(categoryId, btn) {
   currentCategory = categoryId;
+  // Clear session cache for products so new category loads fresh
+  clearSessionCache(`${STORE_API}/products`);
   document.querySelectorAll('.cat-tab').forEach((t) => t.classList.remove('active'));
   btn.classList.add('active');
   loadProducts(1, true);
@@ -85,10 +126,8 @@ async function loadProducts(page = 1, reset = false) {
     const params = new URLSearchParams({ page, limit: 12 });
     if (currentCategory) params.append('category', currentCategory);
 
-    const res = await fetch(`${STORE_API}/products?${params}`);
-    if (!res.ok) throw new Error('Failed to load products');
-
-    const { products, pagination } = await res.json();
+    const url = `${STORE_API}/products?${params}`;
+    const { products, pagination } = await fetchWithSessionCache(url);
 
     currentPage = pagination.page;
     totalPages = pagination.pages;
@@ -100,12 +139,16 @@ async function loadProducts(page = 1, reset = false) {
       return;
     }
 
+    // Track how many cards are already in the grid before appending
+    // so we can determine above-fold correctly across load-more calls
+    const existingCount = grid.children.length;
+
     products.forEach((product, i) => {
-      const card = buildProductCard(product, i);
+      const absoluteIndex = existingCount + i;
+      const card = buildProductCard(product, absoluteIndex);
       grid.appendChild(card);
     });
 
-    // Load more button
     if (currentPage < totalPages) {
       loadMoreBtn.classList.remove('hidden');
     } else {
@@ -125,14 +168,27 @@ async function loadProducts(page = 1, reset = false) {
 function buildProductCard(product, index) {
   const card = document.createElement('div');
   card.className = 'product-card';
-  card.style.animationDelay = `${index * 60}ms`;
+  card.style.animationDelay = `${Math.min(index, 7) * 60}ms`;
 
   const discount = product.slashPrice
     ? Math.round(((product.slashPrice - product.price) / product.slashPrice) * 100)
     : null;
 
-  const imgHtml = product.images?.[0]?.url
-    ? `<img src="${product.images[0].url}" class="product-img" alt="${escapeHtml(product.name)}" loading="lazy" />`
+  // Above-fold cards (first 4) load eagerly with high priority.
+  // Everything else loads lazily to not block initial render.
+  const isAboveFold = index < 4;
+  const rawUrl = product.images?.[0]?.url || null;
+  const imgSrc = optimiseImageUrl(rawUrl);
+
+  const imgHtml = imgSrc
+    ? `<img
+         src="${imgSrc}"
+         class="product-img"
+         alt="${escapeHtml(product.name)}"
+         loading="${isAboveFold ? 'eager' : 'lazy'}"
+         ${isAboveFold ? 'fetchpriority="high"' : ''}
+         decoding="async"
+       />`
     : `<div class="product-img-placeholder"><i class="fa-solid fa-bowl-food"></i></div>`;
 
   card.innerHTML = `
@@ -158,7 +214,6 @@ function buildProductCard(product, index) {
     </div>
   `;
 
-  // Add to cart
   const btn = card.querySelector('.btn-add-cart');
   btn.addEventListener('click', () => handleAddToCart(product, btn));
 
@@ -169,7 +224,6 @@ function handleAddToCart(product, btn) {
   Cart.addItem(product);
   showToast(`${product.name} added to cart.`, 'success');
 
-  // Brief button feedback
   const original = btn.innerHTML;
   btn.innerHTML = '<i class="fa-solid fa-check"></i> Added';
   btn.classList.add('added');
@@ -202,19 +256,16 @@ function setLoadMoreLoading(state) {
 // ─── Reviews ───────────────────────────────────────────────────────────────
 async function loadReviews() {
   try {
-    const res = await fetch(`${STORE_API}/reviews`);
-    if (!res.ok) return;
-
-    const { reviews } = await res.json();
+    const data = await fetchWithSessionCache(`${STORE_API}/reviews`);
     const grid = document.getElementById('reviewsGrid');
     const empty = document.getElementById('reviewsEmpty');
 
-    if (!reviews.length) {
+    if (!data.reviews.length) {
       empty.classList.remove('hidden');
       return;
     }
 
-    reviews.forEach((review) => {
+    data.reviews.forEach((review) => {
       const card = document.createElement('div');
       card.className = 'review-card glass';
       card.innerHTML = `
@@ -232,15 +283,17 @@ async function loadReviews() {
 // ─── Cart modal ────────────────────────────────────────────────────────────
 function initCartModal() {
   const overlay = document.getElementById('cartOverlay');
-  const sections = ['hero', 'store', 'reviews', 'footer']; // elements to blur
+  const blurTargets = ['hero', 'store', 'reviews', 'footer'];
 
   document.getElementById('cartBtn').addEventListener('click', openCart);
   document.getElementById('cartClose').addEventListener('click', closeCart);
+
   document.getElementById('clearCartBtn').addEventListener('click', () => {
     Cart.clear();
     renderCartContents();
     showToast('Cart cleared.', 'info');
   });
+
   document.getElementById('checkoutBtn').addEventListener('click', () => {
     if (!Cart.getCount()) {
       showToast('Your cart is empty.', 'error');
@@ -249,12 +302,10 @@ function initCartModal() {
     window.location.href = '/pages/checkout.html';
   });
 
-  // Close on overlay click (outside modal)
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) closeCart();
   });
 
-  // Keyboard close
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeCart();
   });
@@ -263,8 +314,7 @@ function initCartModal() {
     renderCartContents();
     overlay.classList.remove('hidden');
     document.body.classList.add('cart-open');
-    // Blur background sections
-    sections.forEach((id) => {
+    blurTargets.forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.classList.add('store-blur');
     });
@@ -273,7 +323,7 @@ function initCartModal() {
   function closeCart() {
     overlay.classList.add('hidden');
     document.body.classList.remove('cart-open');
-    sections.forEach((id) => {
+    blurTargets.forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.classList.remove('store-blur');
     });
@@ -300,7 +350,7 @@ function renderCartContents() {
   body.innerHTML = items.map((item) => `
     <div class="cart-item" data-id="${item._id}">
       ${item.image
-        ? `<img src="${item.image}" class="cart-item-img" alt="${escapeHtml(item.name)}" />`
+        ? `<img src="${optimiseImageUrl(item.image)}" class="cart-item-img" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" />`
         : `<div class="cart-item-img-placeholder"><i class="fa-solid fa-bowl-food"></i></div>`}
       <div class="cart-item-info">
         <p class="cart-item-name">${escapeHtml(item.name)}</p>
@@ -342,8 +392,8 @@ function formatPrice(n) {
 
 function escapeHtml(str) {
   return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
