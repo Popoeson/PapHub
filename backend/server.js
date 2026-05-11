@@ -15,6 +15,7 @@ const authRoutes = require('./routes/auth');
 const categoryRoutes = require('./routes/categories');
 const productRoutes = require('./routes/products');
 const checkoutRoutes = require('./routes/checkout');
+const webhookRoutes = require('./routes/webhook');
 
 // Webhook BEFORE express.json()
 app.use(
