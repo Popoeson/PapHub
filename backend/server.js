@@ -23,13 +23,18 @@ app.use(
   express.raw({ type: 'application/json' }),
   (req, res, next) => {
     req.rawBody = req.body;
-    req.body = JSON.parse(req.body);
-    next();
+
+    try {
+      req.body = JSON.parse(req.body.toString('utf8'));
+      next();
+    } catch (err) {
+      console.error('Webhook JSON parse error:', err.message);
+      return res.status(400).json({ message: 'Invalid webhook payload' });
+    }
   }
 );
 
 // Then standard parsers
-app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // Trust the first proxy (required on Render, Railway, Heroku, etc.)
