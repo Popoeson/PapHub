@@ -35,8 +35,6 @@ const orderSchema = new mongoose.Schema(
 
 // Indexes for order lookups
 orderSchema.index({ email: 1 });
-orderSchema.index({ orderID: 1 });
-orderSchema.index({ paystackReference: 1 });
 orderSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Order', orderSchema);
