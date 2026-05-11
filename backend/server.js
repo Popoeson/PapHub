@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const app = express();
 const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -15,7 +16,20 @@ const categoryRoutes = require('./routes/categories');
 const productRoutes = require('./routes/products');
 const checkoutRoutes = require('./routes/checkout');
 
-const app = express();
+// Webhook BEFORE express.json()
+app.use(
+  '/api/webhook/paystack',
+  express.raw({ type: 'application/json' }),
+  (req, res, next) => {
+    req.rawBody = req.body;
+    req.body = JSON.parse(req.body);
+    next();
+  }
+);
+
+// Then standard parsers
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // Trust the first proxy (required on Render, Railway, Heroku, etc.)
 app.set('trust proxy', 1);
@@ -56,6 +70,7 @@ app.use('/api/admin/categories', categoryRoutes);
 app.use('/api/admin/products', productRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/checkout', checkoutRoutes);
+app.use('/api/webhook', webhookRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
