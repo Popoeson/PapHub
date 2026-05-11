@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PapHub — Order Confirmed</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/success.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar glass-nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <span class="brand-icon-sm"><i class="fa-solid fa-bowl-food"></i></span>
+        <span class="brand-name">PapHub</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="success-main">
+
+    <!-- Loading state -->
+    <div class="loading-state" id="loadingState">
+      <div class="loading-spinner">
+        <i class="fa-solid fa-circle-notch fa-spin"></i>
+      </div>
+      <p class="loading-text">Confirming your payment...</p>
+      <p class="loading-sub">Please do not close this page.</p>
+    </div>
+
+    <!-- Retry state (webhook delay) -->
+    <div class="retry-state hidden" id="retryState">
+      <i class="fa-solid fa-clock retry-icon"></i>
+      <h2>Almost there...</h2>
+      <p>Your payment was received. We're confirming your order.</p>
+      <div class="retry-bar-wrap">
+        <div class="retry-bar" id="retryBar"></div>
+      </div>
+      <p class="retry-count" id="retryCount">Checking... (0/8)</p>
+    </div>
+
+    <!-- Success state -->
+    <div class="success-state hidden" id="successState">
+
+      <!-- Confirmation header -->
+      <div class="success-header glass">
+        <div class="success-icon">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h1 class="success-title">Order Confirmed!</h1>
+        <p class="success-sub">Thank you for your order. A confirmation email has been sent to <strong id="confirmEmail"></strong></p>
+        <div class="order-id-badge">
+          <span class="order-id-label">Order ID</span>
+          <span class="order-id-value" id="orderIdDisplay"></span>
+        </div>
+      </div>
+
+      <div class="success-grid">
+
+        <!-- Order summary -->
+        <div class="success-card glass">
+          <h2 class="card-title"><i class="fa-solid fa-basket-shopping"></i> Order Summary</h2>
+          <div class="order-items" id="orderItems"></div>
+          <div class="order-total-row">
+            <span class="order-total-label">Total Paid</span>
+            <span class="order-total-value" id="orderTotal"></span>
+          </div>
+        </div>
+
+        <!-- Delivery details -->
+        <div class="success-card glass">
+          <h2 class="card-title"><i class="fa-solid fa-location-dot"></i> Delivery Details</h2>
+          <div class="delivery-details" id="deliveryDetails"></div>
+        </div>
+
+      </div>
+
+      <!-- WhatsApp CTA -->
+      <div class="whatsapp-section glass">
+        <div class="whatsapp-info">
+          <i class="fa-brands fa-whatsapp whatsapp-icon"></i>
+          <div>
+            <h3 class="whatsapp-title">Secure Your Order</h3>
+            <p class="whatsapp-desc">Tap the button to send your order details to our WhatsApp to confirm delivery arrangements.</p>
+          </div>
+        </div>
+        <a class="btn-whatsapp" id="whatsappBtn" href="#" target="_blank" rel="noopener noreferrer">
+          <i class="fa-brands fa-whatsapp"></i> Send to WhatsApp
+        </a>
+      </div>
+
+      <!-- Back to store -->
+      <div class="back-wrap">
+        <a href="/" class="btn-back">
+          <i class="fa-solid fa-arrow-left"></i> Continue Shopping
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Error state -->
+    <div class="error-state hidden" id="errorState">
+      <i class="fa-solid fa-circle-xmark error-icon"></i>
+      <h2>Something went wrong</h2>
+      <p id="errorMessage">We couldn't confirm your order. Please contact us with your payment reference.</p>
+      <p class="error-ref">Reference: <strong id="errorRef"></strong></p>
+      <a href="/" class="btn-back">Return to Store</a>
+    </div>
+
+  </main>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="../assets/js/toast.js"></script>
+  <script src="../assets/js/cart.js"></script>
+  <script src="../assets/js/success.js"></script>
+</body>
+</html>
