@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-const transporter = nodemailer.createTransport({
+/* const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,
   port: parseInt(process.env.MAIL_PORT),
   secure: false,
@@ -12,6 +12,20 @@ const transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: false,
   },
+}); */
+
+transporter.verify((err, success) => {
+  if (err) {
+    console.error('Mail transporter error:', err.message);
+    console.error('Mail config:', {
+      host: process.env.MAIL_HOST,
+      port: process.env.MAIL_PORT,
+      user: process.env.MAIL_USER,
+      passLength: process.env.MAIL_PASS?.length,
+    });
+  } else {
+    console.log('Mail transporter ready.');
+  }
 });
 
 // Verify connection on startup
