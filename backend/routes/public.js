@@ -102,7 +102,7 @@ router.get(
   }
 );
 
-// GET /api/public/reviews — approved reviews for store page
+/* // GET /api/public/reviews — approved reviews for store page
 router.get('/reviews', async (req, res) => {
   try {
     const cacheKey = 'public:reviews';
@@ -117,7 +117,7 @@ router.get('/reviews', async (req, res) => {
     console.error('public getReviews error:', err);
     res.status(500).json({ message: 'Server error.' });
   }
-});
+}); */
 
 
 router.get('/reviews', getApprovedReviews);
