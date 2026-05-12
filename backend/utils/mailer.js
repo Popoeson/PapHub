@@ -1,23 +1,49 @@
-const nodemailer = require('nodemailer');
+const https = require('https');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
-  port: parseInt(process.env.MAIL_PORT),
-  secure: false, // TLS
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
+/**
+ * Send email via Brevo HTTP API
+ * Bypasses SMTP port restrictions on Render free tier.
+ */
+const sendEmail = ({ to, subject, html }) => {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({
+      sender: {
+        name: 'PapHub',
+        email: process.env.MAIL_USER,
+      },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    });
 
-// Verify connection on startup
-transporter.verify((err) => {
-  if (err) {
-    console.error('Mail transporter error:', err.message);
-  } else {
-    console.log('Mail transporter ready.');
-  }
-});
+    const options = {
+      hostname: 'api.brevo.com',
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Length': Buffer.byteLength(payload),
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => (data += chunk));
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(data);
+        } else {
+          reject(new Error(`Brevo API error ${res.statusCode}: ${data}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+};
 
 /**
  * Send order confirmation to customer
@@ -46,14 +72,10 @@ const sendCustomerOrderEmail = async (order) => {
   <head><meta charset="UTF-8"/></head>
   <body style="margin:0;padding:0;background:#fff8dc;font-family:'DM Sans',Arial,sans-serif;">
     <div style="max-width:600px;margin:40px auto;background:#fff8dc;border-radius:16px;overflow:hidden;border:1px solid rgba(103,72,70,0.15);box-shadow:0 4px 24px rgba(103,72,70,0.1);">
-
-      <!-- Header -->
       <div style="background:#674846;padding:32px;text-align:center;">
         <h1 style="margin:0;color:#fff8dc;font-size:28px;font-family:Georgia,serif;letter-spacing:1px;">PapHub</h1>
         <p style="margin:8px 0 0;color:rgba(255,248,220,0.75);font-size:14px;">Order Confirmation</p>
       </div>
-
-      <!-- Body -->
       <div style="padding:36px 32px;">
         <h2 style="font-family:Georgia,serif;color:#4e3534;font-size:22px;margin:0 0 8px;">
           Thank you, ${order.customerName}!
@@ -61,14 +83,10 @@ const sendCustomerOrderEmail = async (order) => {
         <p style="color:#8a6260;font-size:14px;margin:0 0 28px;line-height:1.6;">
           Your order has been received and is being processed. Here's a summary of what you ordered.
         </p>
-
-        <!-- Order ID -->
         <div style="background:rgba(103,72,70,0.06);border-radius:10px;padding:16px 20px;margin-bottom:28px;">
           <p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#8a6260;">Order ID</p>
           <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:#4e3534;font-family:Georgia,serif;letter-spacing:2px;">${order.orderID}</p>
         </div>
-
-        <!-- Items table -->
         <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
           <thead>
             <tr>
@@ -79,14 +97,10 @@ const sendCustomerOrderEmail = async (order) => {
           </thead>
           <tbody>${itemsHtml}</tbody>
         </table>
-
-        <!-- Total -->
         <div style="text-align:right;margin-bottom:28px;">
           <span style="font-size:13px;color:#8a6260;text-transform:uppercase;letter-spacing:1px;">Total Paid &nbsp;</span>
           <span style="font-size:22px;font-weight:700;color:#4e3534;font-family:Georgia,serif;">₦${formatPrice(order.totalAmount)}</span>
         </div>
-
-        <!-- Delivery details -->
         <div style="background:rgba(103,72,70,0.06);border-radius:10px;padding:20px;margin-bottom:28px;">
           <p style="margin:0 0 12px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#8a6260;">Delivery Details</p>
           <p style="margin:4px 0;font-size:14px;color:#4e3534;"><strong>Name:</strong> ${order.customerName}</p>
@@ -94,13 +108,10 @@ const sendCustomerOrderEmail = async (order) => {
           <p style="margin:4px 0;font-size:14px;color:#4e3534;"><strong>Address:</strong> ${order.address}</p>
           ${order.landmark ? `<p style="margin:4px 0;font-size:14px;color:#4e3534;"><strong>Landmark:</strong> ${order.landmark}</p>` : ''}
         </div>
-
         <p style="font-size:13px;color:#8a6260;line-height:1.7;margin:0;">
           We'll be in touch shortly to coordinate delivery. If you have any questions, reply to this email.
         </p>
       </div>
-
-      <!-- Footer -->
       <div style="background:#674846;padding:20px 32px;text-align:center;">
         <p style="margin:0;color:rgba(255,248,220,0.6);font-size:12px;">&copy; ${new Date().getFullYear()} PapHub. All rights reserved.</p>
       </div>
@@ -108,8 +119,7 @@ const sendCustomerOrderEmail = async (order) => {
   </body>
   </html>`;
 
-  await transporter.sendMail({
-    from: `"PapHub" <${process.env.MAIL_USER}>`,
+  await sendEmail({
     to: order.email,
     subject: `Order Confirmed — ${order.orderID}`,
     html,
@@ -120,10 +130,6 @@ const sendCustomerOrderEmail = async (order) => {
  * Send order notification to admin
  */
 const sendAdminOrderEmail = async (order) => {
-  const itemsList = order.items
-    .map((i) => `• ${i.name} x${i.quantity} — ₦${formatPrice(i.price * i.quantity)}`)
-    .join('\n');
-
   const html = `
   <!DOCTYPE html>
   <html>
@@ -141,7 +147,6 @@ const sendAdminOrderEmail = async (order) => {
           <tr><td style="padding:8px 0;color:#8a6260;font-size:13px;">Address</td><td style="padding:8px 0;color:#4e3534;font-size:13px;">${order.address}${order.landmark ? ` (${order.landmark})` : ''}</td></tr>
           <tr><td style="padding:8px 0;color:#8a6260;font-size:13px;">Total Paid</td><td style="padding:8px 0;color:#4e3534;font-size:18px;font-weight:700;font-family:Georgia,serif;">₦${formatPrice(order.totalAmount)}</td></tr>
         </table>
-
         <div style="background:rgba(103,72,70,0.06);border-radius:10px;padding:16px 20px;margin-bottom:20px;">
           <p style="margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#8a6260;">Items Ordered</p>
           ${order.items.map((i) => `
@@ -151,7 +156,6 @@ const sendAdminOrderEmail = async (order) => {
             </div>
           `).join('')}
         </div>
-
         <a href="${process.env.FRONTEND_URL}/admin/orders.html"
            style="display:inline-block;padding:12px 24px;background:#674846;color:#fff8dc;text-decoration:none;border-radius:8px;font-size:14px;font-weight:500;">
           View Order in Dashboard
@@ -161,8 +165,7 @@ const sendAdminOrderEmail = async (order) => {
   </body>
   </html>`;
 
-  await transporter.sendMail({
-    from: `"PapHub" <${process.env.MAIL_USER}>`,
+  await sendEmail({
     to: process.env.MAIL_USER,
     subject: `New Order — ${order.orderID} — ₦${formatPrice(order.totalAmount)}`,
     html,
