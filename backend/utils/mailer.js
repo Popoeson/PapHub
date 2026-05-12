@@ -31,6 +31,7 @@ const sendEmail = ({ to, subject, html }) => {
       let data = '';
       res.on('data', (chunk) => (data += chunk));
       res.on('end', () => {
+        console.log(`Brevo API response: ${res.statusCode} — ${data}`);
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(data);
         } else {
@@ -39,7 +40,10 @@ const sendEmail = ({ to, subject, html }) => {
       });
     });
 
-    req.on('error', reject);
+    req.on('error', (err) => {
+      console.error('Brevo request error:', err.message);
+      reject(err);
+    });
     req.write(payload);
     req.end();
   });
