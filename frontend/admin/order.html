@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PapHub — Orders</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <link rel="stylesheet" href="../assets/css/orders.css" />
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon"><i class="fa-solid fa-bowl-food"></i></span>
+      <span class="brand-name">PapHub</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+      <a href="categories.html" class="nav-item"><i class="fa-solid fa-tags"></i> Categories</a>
+      <a href="products.html" class="nav-item"><i class="fa-solid fa-box"></i> Products</a>
+      <a href="orders.html" class="nav-item active"><i class="fa-solid fa-receipt"></i> Orders</a>
+      <a href="reviews.html" class="nav-item"><i class="fa-solid fa-star"></i> Reviews</a>
+    </nav>
+    <button class="btn-logout" id="logoutBtn">
+      <i class="fa-solid fa-right-from-bracket"></i> Logout
+    </button>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+      <h1 class="page-title">Orders</h1>
+      <div class="topbar-actions">
+        <button class="btn-danger-outline hidden" id="bulkDeleteBtn">
+          <i class="fa-solid fa-trash"></i> Delete Selected (<span id="selectedCount">0</span>)
+        </button>
+      </div>
+    </header>
+
+    <main class="main-content">
+
+      <!-- Filters -->
+      <div class="filters-bar">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search by order ID, name or email..." />
+        </div>
+        <select id="statusFilter" class="filter-select">
+          <option value="">All Orders</option>
+          <option value="pending">Pending</option>
+          <option value="delivered">Delivered</option>
+        </select>
+      </div>
+
+      <!-- Orders table -->
+      <div class="card">
+        <div class="card-header">
+          <span id="orderCount">Loading...</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="ordersTable">
+            <thead>
+              <tr>
+                <th class="col-check">
+                  <input type="checkbox" id="selectAll" title="Select all" />
+                </th>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody">
+              <tr><td colspan="7" class="table-empty">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Order Detail Modal -->
+  <div class="modal-overlay hidden" id="orderModal">
+    <div class="modal modal-lg glass">
+      <div class="modal-header">
+        <h2 id="orderModalTitle">Order Details</h2>
+        <button class="modal-close" id="closeOrderModal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="orderModalBody">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div class="modal-actions" id="orderModalActions">
+        <button class="btn-secondary" id="closeOrderModalBtn">Close</button>
+        <button class="btn-deliver hidden" id="deliverBtn">
+          <span class="btn-text"><i class="fa-solid fa-circle-check"></i> Mark as Delivered</span>
+          <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Delete Confirm Modal -->
+  <div class="modal-overlay hidden" id="bulkDeleteModal">
+    <div class="modal modal-sm glass">
+      <div class="modal-header">
+        <h2>Delete Orders</h2>
+        <button class="modal-close" id="closeBulkDeleteModal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="modal-body-text">
+        Are you sure you want to delete <strong id="bulkDeleteCount">0</strong> selected order(s)?
+        This cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelBulkDelete">Cancel</button>
+        <button class="btn-danger" id="confirmBulkDelete">
+          <span class="btn-text">Delete</span>
+          <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Single Delete Confirm Modal -->
+  <div class="modal-overlay hidden" id="deleteOrderModal">
+    <div class="modal modal-sm glass">
+      <div class="modal-header">
+        <h2>Delete Order</h2>
+        <button class="modal-close" id="closeDeleteOrderModal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="modal-body-text">
+        Are you sure you want to delete order <strong id="deleteOrderId"></strong>?
+        This cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelDeleteOrder">Cancel</button>
+        <button class="btn-danger" id="confirmDeleteOrder">
+          <span class="btn-text">Delete</span>
+          <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="../assets/js/toast.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="orders.js"></script>
+</body>
+</html>
