@@ -830,3 +830,33 @@ textarea { resize: vertical; min-height: 80px; }
     padding: 24px 20px;
   }
 }
+
+.badge-pending { background: rgba(201,151,58,0.15); color: var(--accent-gold); }
+
+.order-id-link {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--rose-ebony);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+
+.order-id-link:hover { text-decoration: underline; }
+
+.customer-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--rose-ebony-dark);
+}
+
+.customer-email {
+  font-size: 0.76rem;
+  color: var(--rose-ebony-light);
+}
