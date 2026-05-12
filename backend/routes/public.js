@@ -5,6 +5,8 @@ const validate = require('../middleware/validate');
 const cache = require('../utils/cache');
 const Product = require('../models/Product');
 const Category = require('../models/Category');
+const { getApprovedReviews } = require('../controllers/reviewController');
+
 
 const CACHE_TTL = 120;
 
@@ -116,5 +118,8 @@ router.get('/reviews', async (req, res) => {
     res.status(500).json({ message: 'Server error.' });
   }
 });
+
+
+router.get('/reviews', getApprovedReviews);
 
 module.exports = router;
