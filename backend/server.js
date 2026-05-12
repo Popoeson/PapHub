@@ -15,7 +15,9 @@ const authRoutes = require('./routes/auth');
 const categoryRoutes = require('./routes/categories');
 const productRoutes = require('./routes/products');
 const checkoutRoutes = require('./routes/checkout');
+const orderRoutes = require('./routes/orders');
 const webhookRoutes = require('./routes/webhook');
+
 
 // Webhook BEFORE express.json()
 app.use(
@@ -76,6 +78,7 @@ app.use('/api/admin/categories', categoryRoutes);
 app.use('/api/admin/products', productRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/checkout', checkoutRoutes);
+app.use('/api/admin/orders', orderRoutes);
 app.use('/api/webhook', webhookRoutes);
 
 // Health check
