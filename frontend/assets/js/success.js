@@ -6,14 +6,17 @@
  * 2. Poll backend for order confirmation (webhook may have a small delay)
  * 3. Render order summary, delivery details, WhatsApp button
  * 4. Clear cart on success
+ * 5. Show exit modal if user tries to leave without sending WhatsApp
  */
 
 const API_BASE = 'https://paphub-lav4.onrender.com/api';
 const MAX_RETRIES = 8;
-const RETRY_INTERVAL_MS = 3000; // 3 seconds between polls
+const RETRY_INTERVAL_MS = 3000;
 
 let retryCount = 0;
 let retryTimer = null;
+let whatsappSent = false;
+let exitModalActive = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   Cart.init();
@@ -28,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('errorRef').textContent = reference;
   fetchOrder(reference);
+  initExitModal();
 });
 
 // ─── Poll for order ────────────────────────────────────────────────────────
@@ -35,7 +39,6 @@ async function fetchOrder(reference) {
   try {
     const res = await fetch(`${API_BASE}/webhook/order/${reference}`);
 
-    // 202 = webhook not yet processed, retry
     if (res.status === 202) {
       handleRetry(reference);
       return;
@@ -49,10 +52,8 @@ async function fetchOrder(reference) {
 
     const { order, whatsappUrl } = await res.json();
 
-    // Clear retry timer if running
     if (retryTimer) clearTimeout(retryTimer);
 
-    // Clear cart — payment confirmed
     Cart.clear();
     sessionStorage.removeItem('ph_ref');
 
@@ -75,12 +76,8 @@ function handleRetry(reference) {
     return;
   }
 
-  // Show retry UI on first attempt
-  if (retryCount === 1) {
-    showState('retryState');
-  }
+  if (retryCount === 1) showState('retryState');
 
-  // Animate progress bar
   const progress = (retryCount / MAX_RETRIES) * 100;
   const bar = document.getElementById('retryBar');
   if (bar) bar.style.width = `${progress}%`;
@@ -93,7 +90,6 @@ function handleRetry(reference) {
 
 // ─── Render success ────────────────────────────────────────────────────────
 function renderSuccess(order, whatsappUrl) {
-  // Populate header
   document.getElementById('orderIdDisplay').textContent = order.orderID;
   document.getElementById('confirmEmail').textContent = order.email;
 
@@ -109,7 +105,6 @@ function renderSuccess(order, whatsappUrl) {
     </div>
   `).join('');
 
-  // Total
   document.getElementById('orderTotal').textContent = `₦${formatPrice(order.totalAmount)}`;
 
   // Delivery details
@@ -144,11 +139,93 @@ function renderSuccess(order, whatsappUrl) {
     </div>
   `;
 
-  // WhatsApp button
+  // WhatsApp button — mark as sent when clicked
   const waBtn = document.getElementById('whatsappBtn');
   waBtn.href = whatsappUrl;
+  waBtn.addEventListener('click', () => {
+    whatsappSent = true;
+    // Update button to reflect sent state
+    setTimeout(() => {
+      waBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Sent to WhatsApp';
+      waBtn.style.background = 'var(--accent-green)';
+      waBtn.style.boxShadow = '0 4px 16px rgba(61,140,95,0.35)';
+    }, 500);
+  });
 
   showState('successState');
+}
+
+// ─── Exit modal ────────────────────────────────────────────────────────────
+function initExitModal() {
+  const modal        = document.getElementById('exitModal');
+  const sendBtn      = document.getElementById('exitSendWhatsApp');
+  const leaveBtn     = document.getElementById('exitLeave');
+  const closeBtn     = document.getElementById('exitModalClose');
+
+  // Intercept back button / navigation
+  // Push a state so we can catch the popstate
+  history.pushState({ successPage: true }, '');
+
+  window.addEventListener('popstate', (e) => {
+    if (whatsappSent) return; // already sent — let them leave freely
+
+    // Re-push state to prevent actual navigation
+    history.pushState({ successPage: true }, '');
+    showExitModal();
+  });
+
+  // Intercept anchor navigation (back to store button, etc.)
+  document.addEventListener('click', (e) => {
+    const anchor = e.target.closest('a[href]');
+    if (!anchor) return;
+
+    const href = anchor.getAttribute('href');
+    // Ignore WhatsApp link and external links
+    if (!href || href.startsWith('http') || href.startsWith('https') || href === '#') return;
+
+    if (!whatsappSent) {
+      e.preventDefault();
+      // Store intended destination
+      modal.dataset.destination = anchor.href;
+      showExitModal();
+    }
+  });
+
+  // Modal actions
+  sendBtn.addEventListener('click', () => {
+    hideExitModal();
+    // Trigger WhatsApp button
+    document.getElementById('whatsappBtn').click();
+  });
+
+  leaveBtn.addEventListener('click', () => {
+    whatsappSent = true; // treat as acknowledged
+    hideExitModal();
+    const dest = modal.dataset.destination;
+    if (dest) {
+      window.location.href = dest;
+    } else {
+      history.back();
+    }
+  });
+
+  closeBtn.addEventListener('click', hideExitModal);
+
+  // Click outside modal to close
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) hideExitModal();
+  });
+}
+
+function showExitModal() {
+  if (exitModalActive) return;
+  exitModalActive = true;
+  document.getElementById('exitModal').classList.remove('hidden');
+}
+
+function hideExitModal() {
+  exitModalActive = false;
+  document.getElementById('exitModal').classList.add('hidden');
 }
 
 // ─── State management ──────────────────────────────────────────────────────
