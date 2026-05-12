@@ -114,6 +114,31 @@
 
   <div id="toastContainer" class="toast-container"></div>
 
+<!-- EXIT MODAL -->
+<div class="modal-overlay hidden" id="exitModal">
+  <div class="exit-modal glass">
+    <button class="exit-modal-close" id="exitModalClose">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="exit-modal-icon">
+      <i class="fa-brands fa-whatsapp"></i>
+    </div>
+    <h2 class="exit-modal-title">Wait — your order isn't fully secured!</h2>
+    <p class="exit-modal-body">
+      Your payment was confirmed, but you haven't sent your order to our WhatsApp yet.
+      Sending it ensures we can reach you quickly to arrange delivery.
+    </p>
+    <div class="exit-modal-actions">
+      <button class="btn-exit-whatsapp" id="exitSendWhatsApp">
+        <i class="fa-brands fa-whatsapp"></i> Send to WhatsApp Now
+      </button>
+      <button class="btn-exit-leave" id="exitLeave">
+        Leave anyway
+      </button>
+    </div>
+  </div>
+</div>
+
   <script src="../assets/js/toast.js"></script>
   <script src="../assets/js/cart.js"></script>
   <script src="../assets/js/success.js"></script>
