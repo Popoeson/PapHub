@@ -1,7 +1,6 @@
 /**
  * Admin Dashboard
- * Loads whatever stats are available now.
- * Full stats endpoint wired in Slice 8 when orders exist.
+ * Wires up real stats and recent orders from /api/admin/orders/stats
  */
 
 (async () => {
@@ -10,28 +9,71 @@
 
   initLogout();
   initMobileMenu();
-  loadAvailableStats();
+  loadDashboardStats();
 })();
 
 // ─── Load stats ────────────────────────────────────────────────────────────
-// Products count is available now. Orders stats come in Slice 8.
-async function loadAvailableStats() {
+async function loadDashboardStats() {
   try {
-    const res = await request('/admin/products?limit=1');
-    if (res && res.ok) {
-      const data = await res.json();
+    const [statsRes, productsRes] = await Promise.all([
+      request('/admin/orders/stats'),
+      request('/admin/products?limit=1'),
+    ]);
+
+    // Products count
+    if (productsRes && productsRes.ok) {
+      const productsData = await productsRes.json();
       document.getElementById('statProducts').textContent =
-        data.pagination?.total ?? '—';
+        productsData.pagination?.total ?? '—';
+    }
+
+    // Orders stats
+    if (statsRes && statsRes.ok) {
+      const { stats, recentOrders } = await statsRes.json();
+
+      document.getElementById('statOrders').textContent =
+        stats.totalOrders ?? 0;
+
+      document.getElementById('statRevenue').textContent =
+        `₦${formatPrice(stats.totalRevenue ?? 0)}`;
+
+      document.getElementById('statPending').textContent =
+        stats.pendingOrders ?? 0;
+
+      renderRecentOrders(recentOrders || []);
     }
   } catch (err) {
-    console.error('Stats error:', err);
+    console.error('Dashboard stats error:', err);
+  }
+}
+
+// ─── Recent orders table ───────────────────────────────────────────────────
+function renderRecentOrders(orders) {
+  const tbody = document.getElementById('recentOrdersBody');
+
+  if (!orders.length) {
+    tbody.innerHTML = `<tr>
+      <td colspan="5" class="table-empty">No orders yet.</td>
+    </tr>`;
+    return;
   }
 
-  // Orders stats — will return real values once Slice 8 dashboard endpoint exists
-  // For now show zero placeholders so the page doesn't look broken
-  document.getElementById('statOrders').textContent  = '0';
-  document.getElementById('statRevenue').textContent = '₦0';
-  document.getElementById('statPending').textContent = '0';
+  tbody.innerHTML = orders.map((order) => `
+    <tr>
+      <td>
+        <a href="orders.html" class="order-id-link">${escapeHtml(order.orderID)}</a>
+      </td>
+      <td>${escapeHtml(order.customerName)}</td>
+      <td>₦${formatPrice(order.totalAmount)}</td>
+      <td>
+        <span class="badge ${order.status === 'delivered' ? 'badge-green' : 'badge-pending'}">
+          <i class="fa-solid ${order.status === 'delivered' ? 'fa-circle-check' : 'fa-clock'}"></i>
+          ${order.status === 'delivered' ? 'Delivered' : 'Pending'}
+        </span>
+      </td>
+      <td>${formatDate(order.createdAt)}</td>
+    </tr>
+  `).join('');
 }
 
 // ─── Logout ────────────────────────────────────────────────────────────────
@@ -47,4 +89,23 @@ function initMobileMenu() {
   document.getElementById('menuToggle').addEventListener('click', () => {
     document.getElementById('sidebar').classList.toggle('open');
   });
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function formatPrice(n) {
+  return Number(n).toLocaleString('en-NG', { minimumFractionDigits: 2 });
+}
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  });
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
