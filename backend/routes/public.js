@@ -102,7 +102,6 @@ router.get(
   }
 );
 
-// GET /api/public/reviews
 router.get('/reviews', async (req, res) => {
   try {
     const cacheKey = 'public:reviews';
@@ -123,7 +122,5 @@ router.get('/reviews', async (req, res) => {
     res.status(500).json({ message: 'Server error.' });
   }
 });
-
-
 
 module.exports = router;
