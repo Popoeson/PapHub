@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PapHub — Leave a Review</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/review.css" />
+</head>
+<body>
+
+  <nav class="navbar glass-nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <span class="brand-icon-sm"><i class="fa-solid fa-bowl-food"></i></span>
+        <span class="brand-name">PapHub</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="review-main">
+
+    <!-- Step 1: Verify order -->
+    <div class="review-card glass" id="verifyStep">
+      <div class="card-top">
+        <div class="card-icon">
+          <i class="fa-solid fa-receipt"></i>
+        </div>
+        <h1 class="card-title">Leave a Review</h1>
+        <p class="card-sub">Enter your Order ID and email address to get started.</p>
+      </div>
+
+      <form id="verifyForm" novalidate>
+        <div class="field-group">
+          <label for="orderID">Order ID</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-hashtag input-icon"></i>
+            <input
+              type="text"
+              id="orderID"
+              placeholder="e.g. PH-ABC12345"
+              autocomplete="off"
+              required
+            />
+          </div>
+          <span class="field-error" id="orderIDError"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="verifyEmail">Email Address</label>
+          <div class="input-wrap">
+            <i class="fa-regular fa-envelope input-icon"></i>
+            <input
+              type="email"
+              id="verifyEmail"
+              placeholder="The email used when ordering"
+              required
+            />
+          </div>
+          <span class="field-error" id="verifyEmailError"></span>
+        </div>
+
+        <button type="submit" class="btn-primary" id="verifyBtn">
+          <span class="btn-text">Continue</span>
+          <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Step 2: Write review -->
+    <div class="review-card glass hidden" id="reviewStep">
+      <div class="card-top">
+        <div class="card-icon card-icon-success">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h1 class="card-title">Share Your Experience</h1>
+        <p class="card-sub">Order <strong id="confirmedOrderID"></strong> verified. How was your experience?</p>
+      </div>
+
+      <form id="reviewForm" novalidate>
+        <!-- Star rating -->
+        <div class="field-group">
+          <label>Your Rating</label>
+          <div class="star-rating" id="starRating">
+            <button type="button" class="star" data-value="1"><i class="fa-regular fa-star"></i></button>
+            <button type="button" class="star" data-value="2"><i class="fa-regular fa-star"></i></button>
+            <button type="button" class="star" data-value="3"><i class="fa-regular fa-star"></i></button>
+            <button type="button" class="star" data-value="4"><i class="fa-regular fa-star"></i></button>
+            <button type="button" class="star" data-value="5"><i class="fa-regular fa-star"></i></button>
+          </div>
+          <span class="field-error" id="ratingError"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="reviewText">Your Review</label>
+          <textarea
+            id="reviewText"
+            placeholder="Tell us about your experience — the taste, delivery, packaging..."
+            rows="4"
+            maxlength="500"
+            required
+          ></textarea>
+          <div class="char-count"><span id="charCount">0</span>/500</div>
+          <span class="field-error" id="reviewTextError"></span>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="backToVerify">
+            <i class="fa-solid fa-arrow-left"></i> Back
+          </button>
+          <button type="submit" class="btn-primary" id="submitReviewBtn">
+            <span class="btn-text"><i class="fa-solid fa-paper-plane"></i> Submit Review</span>
+            <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div class="review-card glass hidden" id="successStep">
+      <div class="card-top">
+        <div class="card-icon card-icon-success success-bounce">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h1 class="card-title">Thank You!</h1>
+        <p class="card-sub">Your review has been submitted and will appear on our store after approval.</p>
+      </div>
+      <a href="/" class="btn-primary btn-center">
+        <i class="fa-solid fa-arrow-left"></i> Back to Store
+      </a>
+    </div>
+
+  </main>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="../assets/js/toast.js"></script>
+  <script src="../assets/J's/review.js"></script>
+</body>
+</html>
