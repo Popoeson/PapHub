@@ -1,32 +1,62 @@
 const express = require('express');
-const router  = express.Router();
-const { body, param } = require('express-validator');
+const router = express.Router();
+const { body, param, query } = require('express-validator');
 const validate = require('../middleware/validate');
-const protect  = require('../middleware/auth');
-const ctrl     = require('../controllers/reviewController');
+const { protect } = require('../middleware/auth');
+const {
+  submitReview,
+  getReviews,
+  toggleApproval,
+  deleteReview,
+} = require('../controllers/reviewController');
 
-// ─── PUBLIC ──────────────────────────────────────────────────────────────────
+// ─── Public ────────────────────────────────────────────────────────────────
 
-/**
- * POST /api/reviews/submit
- */
+// POST /api/reviews/submit
 router.post(
   '/submit',
   [
     body('orderID').trim().notEmpty().withMessage('Order ID is required.'),
-    body('email').isEmail().normalizeEmail().withMessage('Valid email is required.'),
-    body('name').trim().notEmpty().isLength({ max: 80 }).withMessage('Name is required (max 80 chars).'),
-    body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5.'),
-    body('comment').trim().notEmpty().isLength({ max: 1000 }).withMessage('Comment is required (max 1000 chars).'),
+    body('email').isEmail().withMessage('Valid email is required.').normalizeEmail(),
+    body('reviewText')
+      .trim()
+      .notEmpty().withMessage('Review text is required.')
+      .isLength({ max: 500 }).withMessage('Review cannot exceed 500 characters.'),
+    body('rating')
+      .isInt({ min: 1, max: 5 })
+      .withMessage('Rating must be between 1 and 5.'),
   ],
   validate,
-  ctrl.submitReview
+  submitReview
 );
 
-// ─── ADMIN ────────────────────────────────────────────────────────────────────
+// ─── Admin ─────────────────────────────────────────────────────────────────
 
-router.get('/',                       protect, ctrl.listReviews);
-router.patch('/:id/toggle-approval',  protect, param('id').isMongoId(), validate, ctrl.toggleApproval);
-router.delete('/:id',                 protect, param('id').isMongoId(), validate, ctrl.deleteReview);
+// GET /api/reviews/admin
+router.get(
+  '/admin',
+  protect,
+  [query('approved').optional().isBoolean()],
+  validate,
+  getReviews
+);
+
+// PATCH /api/reviews/admin/:id/toggle
+router.patch(
+  '/admin/:id/toggle',
+  protect,
+  [param('id').isMongoId().withMessage('Invalid review ID.')],
+  validate,
+  toggleApproval
+);
+
+// DELETE /api/reviews/admin/:id
+router.delete(
+  '/admin/:id',
+  protect,
+  [param('id').isMongoId().withMessage('Invalid review ID.')],
+  validate,
+  deleteReview
+);
 
 module.exports = router;
