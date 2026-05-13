@@ -1,45 +1,41 @@
 const mongoose = require('mongoose');
+const { nanoid } = require('nanoid');
 
-const reviewSchema = new mongoose.Schema(
+const orderItemSchema = new mongoose.Schema({
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  quantity: { type: Number, required: true, min: 1 },
+  image: { type: String, default: null },
+}, { _id: false });
+
+const orderSchema = new mongoose.Schema(
   {
     orderID: {
       type: String,
-      required: true,
-      trim: true,
+      default: () => `PH-${nanoid(8).toUpperCase()}`,
     },
-    orderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Order',
-      required: true,
-    },
-    email: {
+    customerName: { type: String, required: true, trim: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
+    phone: { type: String, required: true, trim: true },
+    address: { type: String, required: true, trim: true },
+    landmark: { type: String, trim: true, default: '' },
+    items: { type: [orderItemSchema], required: true },
+    totalAmount: { type: Number, required: true },
+    paystackReference: { type: String, sparse: true },
+    status: {
       type: String,
-      required: true,
-      lowercase: true,
-      trim: true,
-    },
-    reviewText: {
-      type: String,
-      required: true,
-      trim: true,
-      maxlength: [500, 'Review cannot exceed 500 characters.'],
-    },
-    rating: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 5,
-    },
-    approved: {
-      type: Boolean,
-      default: false,
+      enum: ['pending', 'delivered'],
+      default: 'pending',
     },
   },
   { timestamps: true }
 );
 
-// One review per order
-reviewSchema.index({ orderId: 1 }, { unique: true });
-reviewSchema.index({ approved: 1, createdAt: -1 });
+// Single source of truth for indexes
+orderSchema.index({ orderID: 1 }, { unique: true });
+orderSchema.index({ paystackReference: 1 }, { unique: true, sparse: true });
+orderSchema.index({ email: 1 });
+orderSchema.index({ status: 1, createdAt: -1 });
 
-module.exports = mongoose.model('Review', reviewSchema);
+module.exports = mongoose.model('Order', orderSchema);
