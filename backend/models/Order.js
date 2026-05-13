@@ -34,8 +34,8 @@ const orderSchema = new mongoose.Schema(
 
 // Single source of truth for indexes
 orderSchema.index({ orderID: 1 }, { unique: true });
-orderSchema.index({ paystackReference: 1 }, { unique: true, sparse: true });
-orderSchema.index({ email: 1 });
+/* orderSchema.index({ paystackReference: 1 }, { unique: true, sparse: true });
+orderSchema.index({ email: 1 }); */
 orderSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Order', orderSchema);
