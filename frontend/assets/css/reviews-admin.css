@@ -1,0 +1,177 @@
+/* ─── Review filter tabs ─────────────────────── */
+.review-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.review-tab {
+  padding: 9px 20px;
+  border-radius: 50px;
+  border: 1.5px solid var(--glass-border);
+  background: transparent;
+  color: var(--rose-ebony-light);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.review-tab:hover {
+  background: var(--rose-ebony-faint);
+  color: var(--rose-ebony);
+}
+
+.review-tab.active {
+  background: var(--rose-ebony);
+  color: var(--cornsilk);
+  border-color: var(--rose-ebony);
+}
+
+/* ─── Reviews list ───────────────────────────── */
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.review-item {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  border-bottom: 1px solid rgba(103, 72, 70, 0.07);
+  align-items: flex-start;
+  transition: var(--transition);
+}
+
+.review-item:last-child { border-bottom: none; }
+.review-item:hover { background: rgba(103, 72, 70, 0.02); }
+
+/* Stars */
+.review-stars {
+  color: var(--accent-gold);
+  font-size: 13px;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.review-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.review-order-id {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--rose-ebony-dark);
+}
+
+.review-date {
+  font-size: 0.75rem;
+  color: var(--rose-ebony-light);
+}
+
+.review-text {
+  font-size: 0.88rem;
+  color: var(--rose-ebony-dark);
+  line-height: 1.6;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.review-email {
+  font-size: 0.75rem;
+  color: var(--rose-ebony-light);
+}
+
+/* Review actions */
+.review-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: flex-end;
+}
+
+.btn-approve {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn-approve.approve {
+  background: var(--accent-green-light);
+  color: var(--accent-green);
+  border-color: rgba(61, 140, 95, 0.3);
+}
+
+.btn-approve.approve:hover {
+  background: var(--accent-green);
+  color: #fff;
+  border-color: var(--accent-green);
+}
+
+.btn-approve.hide {
+  background: rgba(103, 72, 70, 0.08);
+  color: var(--rose-ebony-light);
+  border-color: var(--glass-border);
+}
+
+.btn-approve.hide:hover {
+  background: var(--rose-ebony);
+  color: var(--cornsilk);
+  border-color: var(--rose-ebony);
+}
+
+/* Approved badge on review item */
+.review-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.review-status.approved {
+  background: var(--accent-green-light);
+  color: var(--accent-green);
+}
+
+.review-status.pending {
+  background: rgba(201, 151, 58, 0.15);
+  color: var(--accent-gold);
+}
+
+/* ─── Responsive ─────────────────────────────── */
+@media (max-width: 600px) {
+  .review-item {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .review-actions {
+    flex-direction: row;
+    align-items: center;
+  }
+}
