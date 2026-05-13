@@ -80,8 +80,7 @@ app.use('/api/admin/products', productRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/admin/orders', orderRoutes);
-app.use('/api/reviews',       reviewRoutes);
-app.use('/api/admin/reviews', reviewRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api/webhook', webhookRoutes);
 
 // Health check
