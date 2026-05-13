@@ -1,186 +1,219 @@
-/* reviews.js — Admin Reviews Management */
+/**
+ * Admin Reviews Page
+ */
 
-const API = 'https://paphub-lav4.onrender.com';
+let currentPage = 1;
+let currentFilter = '';
+let deletingReviewId = null;
 
-let currentPage   = 1;
-let currentFilter = 'all';
-let deleteTarget  = null;
-
-// ── Auth guard ────────────────────────────────────────────────────────────────
+// ─── Auth guard ────────────────────────────────────────────────────────────
 (async () => {
-  try {
-    await apiFetch(`${API}/api/auth/me`);
-  } catch {
-    window.location.href = 'login.html';
-  }
+  const ok = await requireAuth();
+  if (!ok) return;
+  loadReviews();
+  initTabs();
+  initDeleteModal();
+  initLogout();
+  initMobileMenu();
 })();
 
-// ── Sidebar / mobile ──────────────────────────────────────────────────────────
-document.getElementById('hamburger').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebar-overlay').classList.toggle('open');
-});
-document.getElementById('sidebar-overlay').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebar-overlay').classList.remove('open');
-});
-document.getElementById('logout-btn').addEventListener('click', async () => {
-  await apiFetch(`${API}/api/auth/logout`, { method: 'POST' }).catch(() => {});
-  window.location.href = 'login.html';
-});
+// ─── Load reviews ──────────────────────────────────────────────────────────
+async function loadReviews(page = 1) {
+  currentPage = page;
 
-// ── Filter tabs ───────────────────────────────────────────────────────────────
-document.querySelectorAll('.filter-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    currentFilter = tab.dataset.filter;
-    currentPage   = 1;
-    loadReviews();
-  });
-});
+  const list    = document.getElementById('reviewsList');
+  const countEl = document.getElementById('reviewCount');
 
-// ── Load reviews ──────────────────────────────────────────────────────────────
-async function loadReviews() {
-  const tbody = document.getElementById('reviews-tbody');
-  tbody.innerHTML = `<tr><td colspan="7" class="table-empty"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</td></tr>`;
+  list.innerHTML = `<div class="table-empty">
+    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
+  </div>`;
 
   try {
-    const qs  = new URLSearchParams({ page: currentPage, limit: 20 });
-    if (currentFilter !== 'all') qs.set('approved', currentFilter);
+    const params = new URLSearchParams({ page, limit: 20 });
+    if (currentFilter !== '') params.append('approved', currentFilter);
 
-    const data = await apiFetch(`${API}/api/admin/reviews?${qs}`);
+    const res  = await request(`/reviews/admin?${params}`);
+    const data = await res.json();
 
-    if (!data.reviews.length) {
-      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">No reviews found.</td></tr>`;
-      document.getElementById('pagination').innerHTML = '';
+    if (!res.ok) {
+      list.innerHTML = `<div class="table-empty">Failed to load reviews.</div>`;
       return;
     }
 
-    tbody.innerHTML = data.reviews.map(r => `
-      <tr id="row-${r._id}">
-        <td><strong>${esc(r.name)}</strong><br/><small style="color:#7a6060">${esc(r.email)}</small></td>
-        <td>${renderStars(r.rating)}</td>
-        <td><div class="review-comment">${esc(r.comment)}</div></td>
-        <td><code>${esc(r.orderID)}</code></td>
-        <td>${new Date(r.createdAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}</td>
-        <td>
-          <span class="badge ${r.approved ? 'badge-approved' : 'badge-pending'}">
-            ${r.approved ? 'Approved' : 'Pending'}
-          </span>
-        </td>
-        <td>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-            <button
-              class="btn btn-sm ${r.approved ? 'btn-secondary' : 'btn-primary'}"
-              onclick="toggleApproval('${r._id}', ${r.approved})"
-              title="${r.approved ? 'Unapprove' : 'Approve'}"
-            >
-              <i class="fa-solid ${r.approved ? 'fa-eye-slash' : 'fa-check'}"></i>
-              ${r.approved ? 'Unapprove' : 'Approve'}
-            </button>
-            <button
-              class="btn btn-sm btn-danger"
-              onclick="openDeleteModal('${r._id}')"
-              title="Delete review"
-            >
-              <i class="fa-solid fa-trash"></i>
-            </button>
+    const { reviews, pagination } = data;
+    countEl.textContent = `${pagination.total} review${pagination.total === 1 ? '' : 's'}`;
+
+    if (!reviews.length) {
+      list.innerHTML = `<div class="table-empty">No reviews found.</div>`;
+      renderPagination(pagination);
+      return;
+    }
+
+    list.innerHTML = reviews.map((review) => `
+      <div class="review-item" data-id="${review._id}">
+        <div class="review-body">
+          <div class="review-stars">
+            ${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
           </div>
-        </td>
-      </tr>
+          <div class="review-meta">
+            <span class="review-order-id">${escapeHtml(review.orderID)}</span>
+            <span class="review-date">${formatDate(review.createdAt)}</span>
+            <span class="review-status ${review.approved ? 'approved' : 'pending'}">
+              <i class="fa-solid ${review.approved ? 'fa-circle-check' : 'fa-clock'}"></i>
+              ${review.approved ? 'Approved' : 'Pending'}
+            </span>
+          </div>
+          <p class="review-text">"${escapeHtml(review.reviewText)}"</p>
+          <p class="review-email">${escapeHtml(review.email)}</p>
+        </div>
+        <div class="review-actions">
+          <button
+            class="btn-approve ${review.approved ? 'hide' : 'approve'}"
+            onclick="toggleApproval('${review._id}', this)"
+          >
+            <i class="fa-solid ${review.approved ? 'fa-eye-slash' : 'fa-circle-check'}"></i>
+            ${review.approved ? 'Hide' : 'Approve'}
+          </button>
+          <button class="btn-icon btn-icon-delete" onclick="openDeleteReview('${review._id}')" title="Delete">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
     `).join('');
 
-    renderPagination(data.pagination);
-
+    renderPagination(pagination);
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="7" class="table-empty">Failed to load reviews.</td></tr>`;
-    showToast('Could not load reviews.', 'error');
     console.error(err);
+    list.innerHTML = `<div class="table-empty">Error loading reviews.</div>`;
   }
 }
 
-// ── Stars helper ──────────────────────────────────────────────────────────────
-function renderStars(rating) {
-  let html = '<span class="stars-display">';
-  for (let i = 1; i <= 5; i++) {
-    html += i <= rating
-      ? '<i class="fa-solid fa-star"></i>'
-      : '<i class="fa-regular fa-star empty"></i>';
+// ─── Pagination ────────────────────────────────────────────────────────────
+function renderPagination({ page, pages }) {
+  const container = document.getElementById('pagination');
+  if (pages <= 1) { container.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" onclick="loadReviews(${page - 1})" ${page === 1 ? 'disabled' : ''}>
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>`;
+
+  for (let i = 1; i <= pages; i++) {
+    html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="loadReviews(${i})">${i}</button>`;
   }
-  return html + '</span>';
+
+  html += `<button class="page-btn" onclick="loadReviews(${page + 1})" ${page === pages ? 'disabled' : ''}>
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>`;
+
+  container.innerHTML = html;
 }
 
-function esc(str) {
-  if (!str) return '';
+// ─── Filter tabs ───────────────────────────────────────────────────────────
+function initTabs() {
+  document.querySelectorAll('.review-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.review-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentFilter = tab.dataset.filter;
+      loadReviews(1);
+    });
+  });
+}
+
+// ─── Toggle approval ───────────────────────────────────────────────────────
+async function toggleApproval(id, btn) {
+  btn.disabled = true;
+
+  try {
+    const res  = await request(`/reviews/admin/${id}/toggle`, { method: 'PATCH' });
+    const data = await res.json();
+
+    if (res.ok) {
+      showToast(data.message, 'success');
+      loadReviews(currentPage);
+    } else {
+      showToast(data.message || 'Failed to update review.', 'error');
+      btn.disabled = false;
+    }
+  } catch (err) {
+    showToast('Server error.', 'error');
+    btn.disabled = false;
+  }
+}
+
+// ─── Delete modal ──────────────────────────────────────────────────────────
+function initDeleteModal() {
+  document.getElementById('closeDeleteReviewModal').addEventListener('click', closeDeleteModal);
+  document.getElementById('cancelDeleteReview').addEventListener('click', closeDeleteModal);
+  document.getElementById('deleteReviewModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('deleteReviewModal')) closeDeleteModal();
+  });
+
+  document.getElementById('confirmDeleteReview').addEventListener('click', async () => {
+    if (!deletingReviewId) return;
+    const btn = document.getElementById('confirmDeleteReview');
+    setLoading(btn, true);
+
+    try {
+      const res  = await request(`/reviews/admin/${deletingReviewId}`, { method: 'DELETE' });
+      const data = await res.json();
+
+      if (res.ok) {
+        showToast(data.message, 'success');
+        closeDeleteModal();
+        loadReviews(currentPage);
+      } else {
+        showToast(data.message || 'Failed to delete.', 'error');
+      }
+    } catch (err) {
+      showToast('Server error.', 'error');
+    } finally {
+      setLoading(btn, false);
+    }
+  });
+}
+
+function openDeleteReview(id) {
+  deletingReviewId = id;
+  document.getElementById('deleteReviewModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteReviewModal').classList.add('hidden');
+  deletingReviewId = null;
+}
+
+// ─── Logout + mobile menu ──────────────────────────────────────────────────
+function initLogout() {
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await Auth.logout();
+    window.location.href = '/admin/login.html';
+  });
+}
+
+function initMobileMenu() {
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function setLoading(btn, state) {
+  btn.disabled = state;
+  btn.querySelector('.btn-text')?.classList.toggle('hidden', state);
+  btn.querySelector('.btn-loader')?.classList.toggle('hidden', !state);
+}
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  });
+}
+
+function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
-
-// ── Toggle approval ───────────────────────────────────────────────────────────
-async function toggleApproval(id, currentApproved) {
-  try {
-    await apiFetch(`${API}/api/admin/reviews/${id}/toggle-approval`, { method: 'PATCH' });
-    showToast(currentApproved ? 'Review unapproved.' : 'Review approved!', 'success');
-    loadReviews();
-  } catch (err) {
-    showToast('Failed to update review.', 'error');
-  }
-}
-
-// ── Delete ────────────────────────────────────────────────────────────────────
-function openDeleteModal(id) {
-  deleteTarget = id;
-  document.getElementById('delete-modal').classList.add('open');
-}
-
-document.getElementById('cancel-delete').addEventListener('click', () => {
-  deleteTarget = null;
-  document.getElementById('delete-modal').classList.remove('open');
-});
-
-document.getElementById('confirm-delete').addEventListener('click', async () => {
-  if (!deleteTarget) return;
-  document.getElementById('delete-modal').classList.remove('open');
-  try {
-    await apiFetch(`${API}/api/admin/reviews/${deleteTarget}`, { method: 'DELETE' });
-    showToast('Review deleted.', 'success');
-    deleteTarget = null;
-    loadReviews();
-  } catch {
-    showToast('Failed to delete review.', 'error');
-  }
-});
-
-// ── Pagination ────────────────────────────────────────────────────────────────
-function renderPagination({ page, pages }) {
-  const el = document.getElementById('pagination');
-  if (pages <= 1) { el.innerHTML = ''; return; }
-
-  let html = '';
-  html += `<button class="page-btn" ${page === 1 ? 'disabled' : ''} onclick="goPage(${page - 1})">
-             <i class="fa-solid fa-chevron-left"></i>
-           </button>`;
-
-  for (let p = 1; p <= pages; p++) {
-    html += `<button class="page-btn ${p === page ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
-  }
-
-  html += `<button class="page-btn" ${page === pages ? 'disabled' : ''} onclick="goPage(${page + 1})">
-             <i class="fa-solid fa-chevron-right"></i>
-           </button>`;
-
-  el.innerHTML = html;
-}
-
-function goPage(p) {
-  currentPage = p;
-  loadReviews();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-loadReviews();
