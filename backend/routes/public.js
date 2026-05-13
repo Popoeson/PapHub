@@ -102,24 +102,28 @@ router.get(
   }
 );
 
-/* // GET /api/public/reviews — approved reviews for store page
+// GET /api/public/reviews
 router.get('/reviews', async (req, res) => {
   try {
     const cacheKey = 'public:reviews';
     const cached = cache.get(cacheKey);
     if (cached) return res.status(200).json(cached);
 
-    // Review model comes in Slice 7 — return empty for now
-    const payload = { reviews: [] };
+    const Review = require('../models/Review');
+    const reviews = await Review.find({ approved: true })
+      .sort({ createdAt: -1 })
+      .select('orderID reviewText rating createdAt')
+      .limit(20);
+
+    const payload = { reviews };
     cache.set(cacheKey, payload, CACHE_TTL);
     res.status(200).json(payload);
   } catch (err) {
     console.error('public getReviews error:', err);
     res.status(500).json({ message: 'Server error.' });
   }
-}); */
+});
 
 
-router.get('/reviews', getApprovedReviews);
 
 module.exports = router;
