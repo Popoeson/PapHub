@@ -3,121 +3,83 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reviews — PapHub Admin</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <title>PapHub — Reviews</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../assets/css/admin.css" />
-  <style>
-    /* ── Reviews-specific overrides ─────────────────────────────────────────── */
-    .stars-display { color: #c9952a; font-size: 0.95rem; letter-spacing: 1px; }
-    .stars-display .empty { color: #d9cfc3; }
-
-    .review-comment {
-      font-size: 0.9rem;
-      color: #5a4a4a;
-      max-width: 360px;
-      white-space: normal;
-      line-height: 1.45;
-    }
-
-    .badge-pending  { background: #f0e6c8; color: #8a6000; }
-    .badge-approved { background: #d4edda; color: #1a5e35; }
-
-    .filter-tabs {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
-      flex-wrap: wrap;
-    }
-    .filter-tab {
-      padding: 0.45rem 1.1rem;
-      border-radius: 20px;
-      border: 1.5px solid var(--rose);
-      background: transparent;
-      color: var(--rose);
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.18s, color 0.18s;
-    }
-    .filter-tab.active,
-    .filter-tab:hover {
-      background: var(--rose);
-      color: #fff8dc;
-    }
-  </style>
+  <link rel="stylesheet" href="../assets/css/reviews-admin.css" />
 </head>
 <body>
 
-  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">PapHub</div>
+    <div class="sidebar-brand">
+      <span class="brand-icon"><i class="fa-solid fa-bowl-food"></i></span>
+      <span class="brand-name">PapHub</span>
+    </div>
     <nav class="sidebar-nav">
-      <a href="dashboard.html"><i class="fa-solid fa-gauge"></i> Dashboard</a>
-      <a href="categories.html"><i class="fa-solid fa-tag"></i> Categories</a>
-      <a href="products.html"><i class="fa-solid fa-box"></i> Products</a>
-      <a href="orders.html"><i class="fa-solid fa-receipt"></i> Orders</a>
-      <a href="reviews.html" class="active"><i class="fa-solid fa-star"></i> Reviews</a>
+      <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+      <a href="categories.html" class="nav-item"><i class="fa-solid fa-tags"></i> Categories</a>
+      <a href="products.html" class="nav-item"><i class="fa-solid fa-box"></i> Products</a>
+      <a href="orders.html" class="nav-item"><i class="fa-solid fa-receipt"></i> Orders</a>
+      <a href="reviews.html" class="nav-item active"><i class="fa-solid fa-star"></i> Reviews</a>
     </nav>
-    <button class="sidebar-logout" id="logout-btn">
+    <button class="btn-logout" id="logoutBtn">
       <i class="fa-solid fa-right-from-bracket"></i> Logout
     </button>
   </aside>
 
-  <!-- Mobile header -->
-  <header class="mobile-header">
-    <button class="hamburger" id="hamburger"><i class="fa-solid fa-bars"></i></button>
-    <span class="mobile-title">Reviews</span>
-  </header>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+      <h1 class="page-title">Reviews</h1>
+    </header>
 
-  <!-- Main -->
-  <main class="main-content">
-    <div class="page-header">
-      <h1 class="page-title"><i class="fa-solid fa-star"></i> Reviews</h1>
-    </div>
+    <main class="main-content">
 
-    <!-- Filter tabs -->
-    <div class="filter-tabs">
-      <button class="filter-tab active" data-filter="all">All</button>
-      <button class="filter-tab" data-filter="false">Pending</button>
-      <button class="filter-tab" data-filter="true">Approved</button>
-    </div>
+      <!-- Filter tabs -->
+      <div class="review-tabs">
+        <button class="review-tab active" data-filter="">All</button>
+        <button class="review-tab" data-filter="false">Pending Approval</button>
+        <button class="review-tab" data-filter="true">Approved</button>
+      </div>
 
-    <!-- Table -->
-    <div class="table-card">
-      <table class="data-table" id="reviews-table">
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Rating</th>
-            <th>Review</th>
-            <th>Order ID</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="reviews-tbody">
-          <tr><td colspan="7" class="table-empty"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</td></tr>
-        </tbody>
-      </table>
-    </div>
+      <!-- Reviews list -->
+      <div class="card">
+        <div class="card-header">
+          <span id="reviewCount">Loading...</span>
+        </div>
+        <div id="reviewsList" class="reviews-list">
+          <div class="table-empty">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
+          </div>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
 
-    <!-- Pagination -->
-    <div class="pagination" id="pagination"></div>
-  </main>
+    </main>
+  </div>
 
-  <!-- Delete confirm modal -->
-  <div class="modal-overlay" id="delete-modal">
-    <div class="modal">
-      <h3>Delete Review?</h3>
-      <p>This action cannot be undone.</p>
+  <!-- Delete Confirm Modal -->
+  <div class="modal-overlay hidden" id="deleteReviewModal">
+    <div class="modal modal-sm glass">
+      <div class="modal-header">
+        <h2>Delete Review</h2>
+        <button class="modal-close" id="closeDeleteReviewModal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="modal-body-text">Are you sure you want to delete this review? This cannot be undone.</p>
       <div class="modal-actions">
-        <button class="btn btn-secondary" id="cancel-delete">Cancel</button>
-        <button class="btn btn-danger" id="confirm-delete">Delete</button>
+        <button class="btn-secondary" id="cancelDeleteReview">Cancel</button>
+        <button class="btn-danger" id="confirmDeleteReview">
+          <span class="btn-text">Delete</span>
+          <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+        </button>
       </div>
     </div>
   </div>
+
+  <div id="toastContainer" class="toast-container"></div>
 
   <script src="../assets/js/toast.js"></script>
   <script src="../assets/js/api.js"></script>
