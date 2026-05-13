@@ -19,6 +19,10 @@ const orderRoutes = require('./routes/orders');
 const reviewRoutes = require('./routes/reviews');
 const webhookRoutes = require('./routes/webhook');
 
+app.get('/loaderio-4aa573b2e4f60362de8e59772f5f01ad.txt', (req, res) => {
+  res.send('loaderio-4aa573b2e4f60362de8e59772f5f01ad');
+});
+
 
 // Webhook BEFORE express.json()
 app.use(
