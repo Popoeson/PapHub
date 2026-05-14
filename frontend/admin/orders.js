@@ -12,6 +12,7 @@ let searchTimer = null;
 (async () => {
   const ok = await requireAuth();
   if (!ok) return;
+  applyRoleUI();
   loadOrders();
   initFilters();
   initBulkDelete();
