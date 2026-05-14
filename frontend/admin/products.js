@@ -13,6 +13,7 @@ let removedPublicIds = [];    // existing images marked for removal
 (async () => {
   const ok = await requireAuth();
   if (!ok) return;
+  applyRoleUI();
   await loadCategories();
   loadProducts();
   initLogout();
