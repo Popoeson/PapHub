@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body, param } = require('express-validator');
 const { protect } = require('../middleware/auth');
+const { requireRole } = require('../middleware/role');
 const validate = require('../middleware/validate');
 const { upload } = require('../config/cloudinary');
 const {
@@ -13,16 +14,12 @@ const {
   toggleStock,
 } = require('../controllers/productController');
 
-// All product admin routes are protected
 router.use(protect);
+router.use(requireRole('superadmin'));
 
-// GET /api/admin/products
 router.get('/', getProducts);
-
-// GET /api/admin/products/:id
 router.get('/:id', [param('id').isMongoId()], validate, getProduct);
 
-// POST /api/admin/products
 router.post(
   '/',
   upload.array('images', 4),
@@ -36,7 +33,6 @@ router.post(
   createProduct
 );
 
-// PATCH /api/admin/products/:id
 router.patch(
   '/:id',
   upload.array('images', 4),
@@ -45,7 +41,6 @@ router.patch(
   updateProduct
 );
 
-// DELETE /api/admin/products/:id
 router.delete(
   '/:id',
   [param('id').isMongoId().withMessage('Invalid product ID.')],
@@ -53,7 +48,6 @@ router.delete(
   deleteProduct
 );
 
-// PATCH /api/admin/products/:id/toggle-stock
 router.patch(
   '/:id/toggle-stock',
   [param('id').isMongoId().withMessage('Invalid product ID.')],
