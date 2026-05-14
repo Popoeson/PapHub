@@ -1,11 +1,10 @@
 /**
  * Run once: node scripts/seedAdmin.js
- * Creates the admin account using credentials from .env
- * Remove ADMIN_EMAIL and ADMIN_PASSWORD from .env after running.
+ * Creates the superadmin account using credentials from .env
+ * Remove ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME from .env after running.
  */
 
 require('dotenv').config({ path: '../.env' });
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
 const connectDB = require('../config/db');
@@ -13,8 +12,9 @@ const connectDB = require('../config/db');
 const seed = async () => {
   await connectDB();
 
-  const email = process.env.ADMIN_EMAIL;
+  const email    = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
+  const name     = process.env.ADMIN_NAME || 'Super Admin';
 
   if (!email || !password) {
     console.error('ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env');
@@ -24,16 +24,29 @@ const seed = async () => {
   const existing = await Admin.findOne({ email });
 
   if (existing) {
-    console.log('Admin account already exists. Seeder aborted.');
+    // If account exists but has no name or role, update it
+    if (!existing.name || existing.role !== 'superadmin') {
+      existing.name = name;
+      existing.role = 'superadmin';
+      await existing.save();
+      console.log(`Existing admin updated to superadmin: ${email}`);
+    } else {
+      console.log('Superadmin account already exists. Seeder aborted.');
+    }
     process.exit(0);
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
 
-  await Admin.create({ email, passwordHash });
+  await Admin.create({
+    email,
+    name,
+    passwordHash,
+    role: 'superadmin',
+  });
 
-  console.log(`Admin created: ${email}`);
-  console.log('Remove ADMIN_EMAIL and ADMIN_PASSWORD from .env now.');
+  console.log(`Superadmin created: ${email}`);
+  console.log('Remove ADMIN_EMAIL, ADMIN_PASSWORD and ADMIN_NAME from .env now.');
   process.exit(0);
 };
 
