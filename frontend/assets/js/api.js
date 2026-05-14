@@ -7,20 +7,15 @@
 const API_BASE = 'https://paphub-lav4.onrender.com/api';
 
 let _accessToken = null;
+let _adminRole   = null;
 
-// ─── Token management ──────────────────────────────────────────────────────
+// ─── Token + role management ───────────────────────────────────────────────
 
-function setAccessToken(token) {
-  _accessToken = token;
-}
-
-function clearAccessToken() {
-  _accessToken = null;
-}
-
-function getAccessToken() {
-  return _accessToken;
-}
+function setAccessToken(token) { _accessToken = token; }
+function clearAccessToken()    { _accessToken = null; _adminRole = null; }
+function getAccessToken()      { return _accessToken; }
+function setAdminRole(role)    { _adminRole = role; }
+function getAdminRole()        { return _adminRole; }
 
 // ─── Core request function ─────────────────────────────────────────────────
 
@@ -42,8 +37,6 @@ async function request(endpoint, options = {}, retry = true) {
 
   const res = await fetch(`${API_BASE}${endpoint}`, config);
 
-  // Silent refresh: if 401, parse body once, check for TOKEN_EXPIRED,
-  // then reconstruct a fake response so the caller can still read the body.
   if (res.status === 401 && retry) {
     const body = await res.json().catch(() => ({}));
 
@@ -57,7 +50,6 @@ async function request(endpoint, options = {}, retry = true) {
       }
     }
 
-    // Not a TOKEN_EXPIRED 401 — reconstruct response so caller can read body
     return new Response(JSON.stringify(body), {
       status: res.status,
       headers: { 'Content-Type': 'application/json' },
@@ -135,13 +127,30 @@ async function requireAuth() {
     return false;
   }
 
+  const { admin } = await res.json();
+  setAdminRole(admin.role);
+
   return true;
 }
 
-window.API_BASE = API_BASE;
-window.setAccessToken = setAccessToken;
+// ─── Role-based UI helper ──────────────────────────────────────────────────
+// Hides elements marked with data-role="superadmin" from regular admins.
+function applyRoleUI() {
+  const role = getAdminRole();
+  document.querySelectorAll('[data-role="superadmin"]').forEach((el) => {
+    if (role !== 'superadmin') {
+      el.style.display = 'none';
+    }
+  });
+}
+
+window.API_BASE        = API_BASE;
+window.setAccessToken  = setAccessToken;
 window.clearAccessToken = clearAccessToken;
-window.getAccessToken = getAccessToken;
-window.request = request;
-window.Auth = Auth;
-window.requireAuth = requireAuth;
+window.getAccessToken  = getAccessToken;
+window.setAdminRole    = setAdminRole;
+window.getAdminRole    = getAdminRole;
+window.request         = request;
+window.Auth            = Auth;
+window.requireAuth     = requireAuth;
+window.applyRoleUI     = applyRoleUI;
