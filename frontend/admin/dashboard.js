@@ -6,6 +6,7 @@
 (async () => {
   const ok = await requireAuth();
   if (!ok) return;
+  applyRoleUI();
 
   initLogout();
   initMobileMenu();
