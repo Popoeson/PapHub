@@ -10,6 +10,7 @@ let deletingReviewId = null;
 (async () => {
   const ok = await requireAuth();
   if (!ok) return;
+  applyRoleUI();
   loadReviews();
   initTabs();
   initDeleteModal();
