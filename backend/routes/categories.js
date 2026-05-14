@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body, param } = require('express-validator');
 const { protect } = require('../middleware/auth');
+const { requireRole } = require('../middleware/role');
 const validate = require('../middleware/validate');
 const {
   getCategories,
@@ -10,23 +11,23 @@ const {
   deleteCategory,
 } = require('../controllers/categoryController');
 
-// All category admin routes are protected
 router.use(protect);
 
-// GET /api/admin/categories
+// GET — both roles can read
 router.get('/', getCategories);
 
-// POST /api/admin/categories
+// Write operations — superadmin only
 router.post(
   '/',
+  requireRole('superadmin'),
   [body('name').trim().notEmpty().withMessage('Category name is required.').isLength({ max: 50 })],
   validate,
   createCategory
 );
 
-// PATCH /api/admin/categories/:id
 router.patch(
   '/:id',
+  requireRole('superadmin'),
   [
     param('id').isMongoId().withMessage('Invalid category ID.'),
     body('name').trim().notEmpty().withMessage('Category name is required.').isLength({ max: 50 }),
@@ -35,9 +36,9 @@ router.patch(
   updateCategory
 );
 
-// DELETE /api/admin/categories/:id
 router.delete(
   '/:id',
+  requireRole('superadmin'),
   [param('id').isMongoId().withMessage('Invalid category ID.')],
   validate,
   deleteCategory
