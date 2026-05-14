@@ -9,6 +9,7 @@ let deletingId = null;
 (async () => {
   const ok = await requireAuth();
   if (!ok) return;
+  applyRoleUI();
   loadCategories();
   initLogout();
   initMobileMenu();
