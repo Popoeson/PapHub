@@ -10,15 +10,24 @@ const adminSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     passwordHash: {
       type: String,
       required: true,
+    },
+    role: {
+      type: String,
+      enum: ['superadmin', 'admin'],
+      default: 'admin',
     },
     refreshToken: {
       type: String,
       default: null,
     },
-    // Brute force tracking
     failedLoginAttempts: {
       type: Number,
       default: 0,
@@ -31,29 +40,22 @@ const adminSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Virtual: is account currently locked
 adminSchema.virtual('isLocked').get(function () {
   return this.lockUntil && this.lockUntil > Date.now();
 });
 
-// Compare submitted password against stored hash
 adminSchema.methods.comparePassword = async function (plainPassword) {
   return bcrypt.compare(plainPassword, this.passwordHash);
 };
 
-// Increment failed attempts; lock after 5
 adminSchema.methods.incrementFailedAttempts = async function () {
   this.failedLoginAttempts += 1;
-
   if (this.failedLoginAttempts >= 5) {
-    // Lock for 15 minutes
     this.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
   }
-
   await this.save();
 };
 
-// Reset on successful login
 adminSchema.methods.resetFailedAttempts = async function () {
   this.failedLoginAttempts = 0;
   this.lockUntil = null;
