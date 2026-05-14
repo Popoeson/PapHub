@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PapHub — Team</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <link rel="stylesheet" href="../assets/css/team.css" />
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon"><i class="fa-solid fa-bowl-food"></i></span>
+      <span class="brand-name">PapHub</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+      <a href="categories.html" class="nav-item"><i class="fa-solid fa-tags"></i> Categories</a>
+      <a href="products.html" class="nav-item"><i class="fa-solid fa-box"></i> Products</a>
+      <a href="orders.html" class="nav-item"><i class="fa-solid fa-receipt"></i> Orders</a>
+      <a href="reviews.html" class="nav-item"><i class="fa-solid fa-star"></i> Reviews</a>
+      <a href="team.html" class="nav-item active"><i class="fa-solid fa-users"></i> Team</a>
+    </nav>
+    <button class="btn-logout" id="logoutBtn">
+      <i class="fa-solid fa-right-from-bracket"></i> Logout
+    </button>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars"></i></button>
+      <h1 class="page-title">Team</h1>
+      <button class="btn-primary" id="openAddModal">
+        <i class="fa-solid fa-plus"></i> Add Admin
+      </button>
+    </header>
+
+    <main class="main-content">
+      <div class="card">
+        <div class="card-header">
+          <span id="adminCount">Loading...</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminsBody">
+              <tr><td colspan="5" class="table-empty">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Admin Modal -->
+  <div class="modal-overlay hidden" id="addAdminModal">
+    <div class="modal glass">
+      <div class="modal-header">
+        <h2>Add Admin</h2>
+        <button class="modal-close" id="closeAddModal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form id="addAdminForm" novalidate>
+        <div class="field-group">
+          <label for="adminName">Full Name</label>
+          <input type="text" id="adminName" placeholder="e.g. Jane Doe" required />
+          <span class="field-error" id="adminNameError"></span>
+        </div>
+        <div class="field-group">
+          <label for="adminEmail">Email Address</label>
+          <input type="email" id="adminEmail" placeholder="jane@paphub.com" required />
+          <span class="field-error" id="adminEmailError"></span>
+        </div>
+        <div class="field-group">
+          <label for="adminPassword">Password</label>
+          <input type="password" id="adminPassword" placeholder="Minimum 8 characters" required />
+          <span class="field-error" id="adminPasswordError"></span>
+        </div>
+        <div class="field-group">
+          <label for="adminRole">Role</label>
+          <select id="adminRole">
+            <option value="admin">Admin — Orders and Reviews only</option>
+            <option value="superadmin">Super Admin — Full access</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="cancelAddModal">Cancel</button>
+          <button type="submit" class="btn-primary" id="addAdminBtn">
+            <span class="btn-text">Create Account</span>
+            <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal-overlay hidden" id="deleteAdminModal">
+    <div class="modal modal-sm glass">
+      <div class="modal-header">
+        <h2>Remove Admin</h2>
+        <button class="modal-close" id="closeDeleteAdminModal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="modal-body-text">
+        Are you sure you want to remove <strong id="deleteAdminName"></strong>?
+        They will lose access immediately.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelDeleteAdmin">Cancel</button>
+        <button class="btn-danger" id="confirmDeleteAdmin">
+          <span class="btn-text">Remove</span>
+          <span class="btn-loader hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="../assets/js/toast.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="team.js"></script>
+</body>
+</html>
