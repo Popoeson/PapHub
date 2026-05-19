@@ -1029,3 +1029,56 @@ body.cart-open .store-blur {
   .glass-cart { max-width: 100%; }
   .footer-inner { flex-direction: column; text-align: center; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   FOOTER PATCH 
+═══════════════════════════════════════════════════════════════ */
+
+/* Makes the footer-links row wrap neatly and center on mobile */
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+/* "Leave a Review" — styled as a pill button so users know it's clickable */
+.footer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(103, 72, 70, 0.12);
+  color: #674846;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(103, 72, 70, 0.25);
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+.footer-btn:hover {
+  background: rgba(103, 72, 70, 0.22);
+  border-color: rgba(103, 72, 70, 0.4);
+}
+.footer-btn i {
+  font-size: 0.8rem;
+  color: #c8972a; /* gold star */
+}
+
+/* About and Terms — plain text links */
+.footer-link {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  color: #674846;
+  text-decoration: none;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+.footer-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
