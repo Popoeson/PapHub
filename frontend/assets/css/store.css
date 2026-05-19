@@ -1082,3 +1082,66 @@ body.cart-open .store-blur {
   opacity: 1;
   text-decoration: underline;
 }
+
+/* =============================================
+   LOGO PATCH
+   Add this to the bottom of store.css
+   Also add to admin-login.css and admin.css
+   ============================================= */
+
+/* ── Navbar logo (store pages & public pages) ── */
+.nav-logo {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* When using image logo, hide the icon fallback */
+.nav-brand:has(.nav-logo) .brand-icon-sm,
+.nav-brand:has(.nav-logo) .brand-name {
+  display: none;
+}
+
+/* ── Sidebar logo (admin pages) ── */
+.sidebar-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* When using image logo in sidebar, hide icon fallback */
+.sidebar-brand:has(.sidebar-logo) .brand-icon,
+.sidebar-brand:has(.sidebar-logo) .brand-name {
+  display: none;
+}
+
+/* ── Admin login brand logo ── */
+.brand-logo {
+  height: 56px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 8px;
+}
+
+/* When using image logo on login, hide icon fallback */
+.brand:has(.brand-logo) .brand-icon,
+.brand:has(.brand-logo) .brand-name {
+  display: none;
+}
+
+/* ── Footer logo (about & terms pages share store.css) ── */
+.footer-logo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);   /* makes any logo white on dark footer */
+  opacity: 0.9;
+}
+
+.footer-brand:has(.footer-logo) .brand-icon-sm,
+.footer-brand:has(.footer-logo) .brand-name {
+  display: none;
+}
