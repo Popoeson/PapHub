@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="PapHub — Fresh, delicious pap delivered to you." />
-  <title>PapHub — Fresh Pap Store</title>
+  <meta name="description" content="Glop Yummy Pap — Fresh, wet, authentic homemade pap, freshly prepared from scratch in Perth, Western Australia." />
+  <title>Glop Yummy Pap — Fresh Pap Store</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/store.css" />
@@ -15,8 +15,10 @@
   <nav class="navbar glass-nav" id="navbar">
     <div class="nav-inner">
       <a href="/" class="nav-brand">
+        <!-- Replace the img src with your logo file path once uploaded -->
+        <!-- <img src="assets/images/logo.png" alt="Glop Yummy Pap" class="nav-logo" /> -->
         <span class="brand-icon-sm"><i class="fa-solid fa-bowl-food"></i></span>
-        <span class="brand-name">PapHub</span>
+        <span class="brand-name">Glop Yummy Pap</span>
       </a>
 
       <div class="nav-right">
@@ -35,7 +37,7 @@
     <div class="hero-content">
       <p class="hero-eyebrow">Freshly Made, Lovingly Served</p>
       <h1 class="hero-title">Discover Our<br /><span class="hero-accent">Premium Pap</span></h1>
-      <p class="hero-sub">Smooth, nourishing, and made with the finest grains — crafted for every occasion.</p>
+      <p class="hero-sub">Fresh, wet, authentic homemade pap, freshly prepared from scratch in Perth, Western Australia.</p>
       <a href="#store" class="btn-hero">
         Shop Now <i class="fa-solid fa-arrow-down"></i>
       </a>
@@ -62,7 +64,6 @@
 
       <!-- Product grid -->
       <div class="product-grid" id="productGrid">
-        <!-- Skeleton loaders -->
         <div class="product-skeleton"></div>
         <div class="product-skeleton"></div>
         <div class="product-skeleton"></div>
@@ -96,11 +97,15 @@
     <div class="footer-inner">
       <div class="footer-brand">
         <span class="brand-icon-sm"><i class="fa-solid fa-bowl-food"></i></span>
-        <span class="brand-name">PapHub</span>
+        <span class="brand-name">Glop Yummy Pap</span>
       </div>
-      <p class="footer-copy">&copy; <span id="year"></span> PapHub. All rights reserved.</p>
+      <p class="footer-copy">&copy; <span id="year"></span> Glop Yummy Pap. All rights reserved.</p>
       <div class="footer-links">
-        <a href="/review.html">Leave a Review</a>
+        <a href="/review.html" class="footer-btn">
+          <i class="fa-solid fa-star"></i> Leave a Review
+        </a>
+        <a href="/about.html" class="footer-link">About Us</a>
+        <a href="/terms.html" class="footer-link">Terms of Use</a>
       </div>
     </div>
   </footer>
@@ -122,7 +127,7 @@
       <div class="cart-footer" id="cartFooter">
         <div class="cart-summary">
           <span class="cart-total-label">Total</span>
-          <span class="cart-total-value" id="cartTotal">₦0.00</span>
+          <span class="cart-total-value" id="cartTotal">A$0.00</span>
         </div>
         <button class="btn-checkout" id="checkoutBtn">
           Proceed to Checkout <i class="fa-solid fa-arrow-right"></i>
